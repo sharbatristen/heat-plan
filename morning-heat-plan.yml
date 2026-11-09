@@ -1,0 +1,73 @@
+# Sends today's heat plan at 8 AM Athens time as a push notification (ntfy app)
+# and, if EMAIL is filled in below, as an email too.
+name: Morning heat plan
+
+on:
+  schedule:
+    - cron: "0 5 * * *"   # 8 AM Athens in summer time
+    - cron: "0 6 * * *"   # 8 AM Athens in winter time
+  workflow_dispatch: {}    # lets you send one now from the Actions tab
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and send the plan
+        env:
+          TOPIC: aratou101-heat-ee48aa6b0a
+          EMAIL: ""            # optional: put your email address between the quotes
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          cat > plan.mjs <<'EOF'
+          const TZ = "Europe/Athens";
+          const hour = +new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date());
+          if (process.env.MANUAL !== "true" && hour !== 8) { console.log("Not 8 AM in Athens, skipping."); process.exit(0); }
+
+          const url = "https://api.open-meteo.com/v1/forecast?latitude=38.2466&longitude=21.7346" +
+            "&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&forecast_days=1&timezone=Europe%2FAthens";
+          const H = (await (await fetch(url)).json()).hourly;
+
+          const ROOMS = [["bed", "Bedroom"], ["upl", "Office/gym"], ["kit", "Kitchen"], ["dnl", "Living room"]];
+          const BASE = { morning: { bed: 19, upl: 20, kit: 20, dnl: 20 }, day: { bed: 18, upl: 19, kit: 19, dnl: 20 } };
+          const F = c => Math.round(c * 9 / 5 + 32);
+          const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+          function wx(h0, h1) {
+            const idx = H.time.map((t, i) => [+t.slice(11, 13), i]).filter(([h]) => h >= h0 && h < h1).map(([, i]) => i);
+            const T = idx.map(i => H.temperature_2m[i]);
+            const sunH = idx.filter(i => H.shortwave_radiation[i] > 50);
+            return {
+              mean: T.reduce((a, b) => a + b, 0) / T.length, min: Math.min(...T), max: Math.max(...T),
+              wind: Math.max(...idx.map(i => H.wind_speed_10m[i])),
+              sun: sunH.length ? sunH.reduce((a, i) => a + 1 - H.cloud_cover[i] / 100, 0) / sunH.length : 0
+            };
+          }
+          function plan(block, w) {
+            return Object.fromEntries(ROOMS.map(([id]) => {
+              let t = BASE[block][id];
+              if (w.mean < 6) t += .5;
+              if (w.wind >= 30 && id !== "kit") t += .5;
+              if (block === "day" && w.sun >= .6 && (id === "upl" || id === "dnl")) t -= .5;
+              t = Math.round(clamp(t, 16, 26));
+              const off = w.mean >= t - 2 && w.min >= t - 4;
+              return [id, off ? "Off" : F(t) + "°F"];
+            }));
+          }
+          const m = wx(6, 10), d = wx(10, 17), pm = plan("morning", m), pd = plan("day", d);
+          const body = [
+            `Until 10 AM (outside ${F(m.min)}–${F(m.max)}°F)`,
+            ...ROOMS.map(([id, n]) => `${n}: ${pm[id]}`),
+            ``,
+            `From 10 AM (outside ${F(d.min)}–${F(d.max)}°F)`,
+            ...ROOMS.map(([id, n]) => `${n}: ${pd[id]}`),
+            ``,
+            `HEAT, fan AUTO, flap lowest, I FEEL on.`
+          ].join("\n");
+
+          const headers = { Title: "Heat plan for today", Tags: "thermometer", Click: "https://sharbatristen.github.io/heat-plan/" };
+          if (process.env.EMAIL) headers.Email = process.env.EMAIL;
+          const r = await fetch("https://ntfy.sh/" + process.env.TOPIC, { method: "POST", headers, body });
+          console.log(body, "\nSent:", r.status);
+          if (!r.ok) process.exit(1);
+          EOF
+          node plan.mjs
