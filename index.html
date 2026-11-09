@@ -3,16 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Patras heat plan</title>
+<title>101 Aratou, Patras, Greece | Heat Plan</title>
+<meta name="theme-color" content="#131619">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Heat Plan">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..700&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:dark;
-  --bg:#15181b; --surface:#1e2226; --surface2:#262b30; --line:#363c43;
-  --text:#ece9e2; --muted:#9aa19f; --faint:#6c7370;
-  --warm:#f0a93b; --cool:#79b4d6; --good:#9cc59a;
+  --bg:#131619; --bg2:#1a1d21; --panel:#242930; --panel2:#2e343b; --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+  --text:#f6f4ef; --muted:#a8afb6; --faint:#727a81;
+  --brass:#e2c9a2; --brass-ink:#1f1a12; --cool:#8ec3e6; --warm:#f2b25b; --good:#a9d3a6;
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -20,122 +27,143 @@
 :root[data-theme="dark"]{color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:680px;margin:0 auto;padding:22px 16px 56px}
-h1{font-size:clamp(34px,9vw,52px);font-stretch:68%;font-weight:800;line-height:.95;margin:0;letter-spacing:-.01em}
-h2{font-size:19px;font-weight:650;margin:0 0 10px;font-stretch:90%}
-h3{font-size:16px;font-weight:650;margin:0 0 6px}
+body{margin:0;min-height:100%;color:var(--text);font-family:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
+  background:radial-gradient(120% 60% at 50% -10%,#272c33 0%,var(--bg) 62%) fixed,var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding:28px 18px 64px;position:relative;z-index:1}
+/* Patras backdrop: view over the city to the gulf from the castle */
+.backdrop{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.backdrop img{width:100%;height:100%;object-fit:cover;object-position:62% 40%;opacity:0;filter:saturate(.75) contrast(1.05);transition:opacity 1.2s ease}
+.backdrop img.on{opacity:.24}
+.backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(19,22,25,.05) 0%,rgba(19,22,25,.4) 50%,rgba(19,22,25,.75) 100%)}
+.credit{margin-top:36px;font-size:11px;color:var(--faint);text-align:center}
+.credit a{color:inherit}
+h1{font-size:15px;font-weight:600;letter-spacing:.01em;margin:0;color:var(--text)}
+h1 .pipe{color:var(--faint);font-weight:300;margin:0 4px}
+h2{font-size:17px;font-weight:600;margin:0 0 12px;letter-spacing:-.005em}
+h3{font-size:15.5px;font-weight:600;margin:0 0 6px}
 p{margin:0 0 10px}
-.sub{color:var(--muted);margin-top:6px}
-.status{font-size:14px;color:var(--muted);margin-top:12px;padding-left:12px;border-left:3px solid var(--faint)}
-.status.live{border-color:var(--cool)}
-.status.warn{border-color:var(--warm);color:var(--text)}
-section{margin-top:28px}
-.small{font-size:13.5px;color:var(--muted)}
+.sub{display:none}
+.status{display:flex;gap:9px;align-items:baseline;font-size:13.5px;color:var(--muted);margin-top:6px;padding:0;border:0}
+.status::before{content:"";flex:0 0 7px;height:7px;border-radius:50%;background:var(--faint);transform:translateY(-1px)}
+.status.live::before{background:var(--good);box-shadow:0 0 0 0 rgba(169,211,166,.5);animation:pulse 2.4s ease-out infinite}
+.status.warn::before{background:var(--warm)}
+.status.warn{color:var(--text)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(169,211,166,.45)}100%{box-shadow:0 0 0 8px rgba(169,211,166,0)}}
+section{margin-top:30px}
+.small{font-size:13px;color:var(--muted)}
 button,input,select{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
 
-.wx{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.wx .now{font-size:44px;font-stretch:70%;font-weight:700;line-height:1;grid-row:span 3}
-.wx .now small{display:block;font-size:13px;font-weight:400;font-stretch:100%;color:var(--muted);margin-top:6px}
-.wx .row{font-size:15px}
-.wx .row b{font-weight:600}
+/* outside */
+#weather{margin-top:22px}
+.wx{display:grid;grid-template-columns:auto 1fr;gap:2px 22px;align-items:center;padding:4px 0 0}
+.wx .now{font-size:76px;font-weight:200;line-height:.9;letter-spacing:-.04em;grid-row:span 3}
+.wx .now small{display:block;font-size:12.5px;font-weight:500;letter-spacing:.02em;color:var(--muted);margin-top:10px}
+.wx .row{font-size:14px;color:var(--muted)}
+.wx .row b{font-weight:600;color:var(--text)}
 
+/* plan */
 .periodline{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.periodline span{color:var(--muted);font-size:14px}
-.xsec{display:grid;grid-template-columns:minmax(0,2fr) 34px minmax(0,3fr);
-  grid-template-areas:"floorU floorU floorU" "bed stair upl" "slabL stair slabR" "floorD floorD floorD" "kit stair dnl" "ground ground ground";
-  gap:0 6px;margin-top:6px}
-.floorlab{font-size:12.5px;color:var(--faint);padding:8px 0 4px}
+.periodline span{color:var(--muted);font-size:13.5px}
+.xsec{display:grid;grid-template-columns:minmax(0,2fr) 22px minmax(0,3fr);
+  grid-template-areas:"floorU floorU floorU" "bed stair upl" "slabL stair slabR" "floorD stair ." "kit stair dnl" "ground ground ground";
+  gap:0 8px;margin-top:4px}
+.floorlab{font-size:12px;font-weight:500;color:var(--faint);padding:10px 2px 6px}
 .floorlab.u{grid-area:floorU}.floorlab.d{grid-area:floorD}
-.slab{height:12px;margin-top:6px;background:repeating-linear-gradient(135deg,#4a525a 0 2px,#2d3338 2px 7px);border-top:1px solid #59626b;border-bottom:1px solid #59626b}
+.slab{height:1px;margin:10px 0 0;background:var(--line2)}
 .slab.l{grid-area:slabL}.slab.r{grid-area:slabR}
-.ground{grid-area:ground;height:14px;margin-top:6px;background:repeating-linear-gradient(135deg,#3c4349 0 1.5px,transparent 1.5px 6px);border-top:2px solid #6a737b}
-.stair{grid-area:stair;display:flex;align-items:stretch;justify-content:center}
-.stair svg{width:34px;height:100%}
-.room{--h:200;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:4px;min-height:136px;padding:12px;border-radius:3px;
-  border:1.5px solid hsla(var(--h),70%,62%,.55);background:hsla(var(--h),55%,42%,.15);transition:background .2s}
-.room:hover{background:hsla(var(--h),55%,42%,.24)}
-.room.sel{outline:2px solid var(--text);outline-offset:2px}
-.rname{font-size:13.5px;color:var(--muted);line-height:1.25}
-.rset{font-size:clamp(42px,12vw,64px);font-stretch:66%;font-weight:750;line-height:.95;color:hsl(var(--h),85%,73%);margin-top:auto}
-.rsub{font-size:13px;color:var(--muted)}
-.room.off{border-style:dashed;border-color:var(--line);background:transparent}
-.room.off .rset{color:var(--faint);font-size:clamp(34px,9vw,48px)}
-.caption{margin-top:12px;font-size:14px;color:var(--muted)}
+.ground{grid-area:ground;height:1px;margin-top:10px;background:var(--line)}
+.stair{grid-area:stair;display:flex;align-items:stretch;justify-content:center;opacity:.55}
+.stair svg{width:22px;height:100%}
+.room{--h:200;--s:50%;position:relative;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;min-height:150px;padding:14px 14px 13px;border-radius:var(--r-lg);overflow:hidden;
+  border:1px solid hsla(var(--h),var(--s),68%,.34);
+  background:radial-gradient(130% 90% at 15% 0%,hsla(var(--h),var(--s),56%,.36) 0%,hsla(var(--h),var(--s),46%,.08) 55%,transparent 80%),var(--panel);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 28px -14px rgba(0,0,0,.75);transition:transform .25s ease,border-color .25s ease}
+.room:active{transform:scale(.985)}
+.room.sel{border-color:hsla(var(--h),var(--s),72%,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 3px hsla(var(--h),var(--s),60%,.18)}
+.rname{font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.25}
+.rset{font-size:clamp(48px,14vw,68px);font-weight:200;line-height:.95;letter-spacing:-.045em;color:hsl(var(--h),calc(var(--s) + 12%),78%);margin-top:auto}
+.rsub{font-size:12px;color:var(--muted)}
+.room.off{border-color:var(--line);background:var(--bg2);box-shadow:none}
+.room.off .rset{color:var(--faint);font-size:clamp(34px,10vw,46px)}
+.caption{margin-top:14px;font-size:13px;color:var(--muted);text-align:center}
 
-/* remote bundle */
-.panel{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 16px 8px}
-.panel-head span{color:var(--muted);font-size:14px}
-.remote{list-style:none;margin:0;padding:0 16px 6px}
-.remote li{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
-.key{justify-self:start;display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:3px 12px;border-radius:999px;background:#e9e7e1;color:#2a2d30;font-size:12.5px;font-weight:600;line-height:1.15;text-align:center}
-.key.pw{color:#c8362f}
-.val{font-size:15px}
-.val b{font-size:20px;font-stretch:80%;font-weight:700}
-.val .why{display:block;font-size:13px;color:var(--muted)}
-.leaveoff{padding:10px 16px 14px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+/* room panel */
+.panel{margin-top:16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 18px 40px -24px rgba(0,0,0,.7)}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:18px 18px 8px}
+.panel-head span{color:var(--muted);font-size:13px}
+.remote{list-style:none;margin:0;padding:0 18px 4px}
+.remote li{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.key{justify-self:start;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;padding:4px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line2);color:var(--text);font-size:11.5px;font-weight:600;letter-spacing:.03em;line-height:1.15;text-align:center}
+.key.pw{color:#ff8e86}
+.key svg{width:14px;height:14px}
+.val{font-size:14.5px}
+.val b{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.val .why{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
+.leaveoff{padding:12px 18px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 .leaveoff b{color:var(--text);font-weight:600}
-
-/* check-in */
-.checkin{padding:14px 16px 16px;background:var(--surface2);border-top:1px solid var(--line)}
+.checkin{padding:18px;background:var(--bg2);border-top:1px solid var(--line)}
 .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-label{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
-input,select{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:10px;font-size:16px;color:var(--text);width:100%}
-.seg{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.seg button{flex:1 1 0;min-width:84px;padding:10px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
-.seg button.cold{border-color:hsla(205,60%,60%,.6)}
-.seg button.warm{border-color:hsla(35,80%,55%,.6)}
-.seg button.right{border-color:hsla(110,30%,60%,.6)}
-.seg button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
-.primary{margin-top:12px;width:100%;padding:12px;border-radius:8px;border:0;background:var(--warm);color:#1b1408;font-weight:650}
-.primary:disabled{opacity:.45;cursor:default}
-.ghost{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:transparent}
-.toast{font-size:14px;color:var(--good);margin:8px 0 0;min-height:1.2em}
+label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:500;color:var(--muted)}
+input,select{background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-sm);padding:11px 12px;font-size:16px;color:var(--text);width:100%;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.seg{display:flex;gap:4px;flex-wrap:nowrap;margin:12px 0;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.seg button{flex:1 1 0;min-width:0;padding:9px 8px;border-radius:999px;border:0;background:transparent;color:var(--muted);font-size:13.5px;font-weight:600;transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 2px 8px rgba(0,0,0,.35)}
+.seg button.cold[aria-pressed="true"]{color:var(--cool)}
+.seg button.warm[aria-pressed="true"]{color:var(--warm)}
+.seg button.right[aria-pressed="true"]{color:var(--good)}
+.primary{margin-top:14px;width:100%;padding:13px;border-radius:999px;border:0;background:var(--brass);color:var(--brass-ink);font-weight:700;letter-spacing:.01em}
+.primary:disabled{opacity:.35;cursor:default}
+.ghost{display:inline-block;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font-size:13.5px;font-weight:600}
+.toast{font-size:13px;color:var(--good);margin:10px 0 0;min-height:1.2em}
+.err{color:var(--warm);font-size:13px}
 
-.switch{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
-.switch li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.switch .v{font-weight:650;white-space:nowrap}
-.switch .d{color:var(--muted);font-size:14px;margin-left:8px;font-weight:400}
-.why-list{margin:0;padding-left:18px}
-.why-list li{margin-bottom:8px}
-.energy .big{font-size:34px;font-stretch:72%;font-weight:700;line-height:1.1;margin-bottom:6px}
-.energy .big span{font-size:16px;font-stretch:100%;font-weight:400;color:var(--muted);margin-left:6px}
-
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+/* lists & cards */
+.card{background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg);padding:18px}
+.switch{list-style:none;margin:0;padding:0 18px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-lg)}
+.switch li{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.switch li:last-child{border-bottom:0}
+.switch .v{font-weight:600;white-space:nowrap}
+.switch .d{color:var(--muted);font-size:12.5px;margin-left:10px;font-weight:500}
+.why-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.why-list li{padding:14px 16px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--r-md);font-size:14px;color:#e1e3e5}
+.energy .big{font-size:48px;font-weight:200;letter-spacing:-.03em;line-height:1;margin:2px 0 10px}
+.energy .big span{font-size:14px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
+.energy p{font-size:14px;color:#e1e3e5}
+.energy .small{color:var(--muted)}
 .worked{list-style:none;padding:0;margin:0}
-.worked li{padding:10px 0;border-bottom:1px solid var(--line)}
+.worked li{padding:11px 0;border-bottom:1px solid var(--line)}
 .worked li:last-child{border-bottom:0}
-.worked .rm{font-weight:600}
-.worked .ln{font-size:14.5px;color:var(--muted)}
-.log{list-style:none;padding:0;margin:10px 0 0}
-.log li{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px}
-.log .meta{color:var(--muted);font-size:13px}
-.log .note{display:block;color:var(--text);font-style:italic}
+.worked .rm{font-weight:600;font-size:14.5px}
+.worked .ln{font-size:13.5px;color:var(--muted)}
+.log{list-style:none;padding:0;margin:8px 0 0}
+.log li{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-top:1px solid var(--line);font-size:14px}
+.log .meta{display:block;color:var(--muted);font-size:12.5px}
+.log .note{display:block;color:#e1e3e5;font-style:italic}
 .x{background:none;border:0;color:var(--faint);font-size:20px;line-height:1;padding:4px 8px}
+.t-cool{color:#96cbfa}.t-warm{color:#ffae55}.t-hot{color:#ff7163}
 .r-cold{color:var(--cool)}.r-right{color:var(--good)}.r-warm{color:var(--warm)}
-.fc{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:10px}
-.fc td{padding:6px 0;border-top:1px solid var(--line)}
+.fc{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+.fc td{padding:8px 0;border-top:1px solid var(--line)}
 .fc td:last-child{text-align:right;color:var(--muted)}
-.prefrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
-.prefrow:last-child{border-bottom:0}
-.prefrow .seg{margin:0;flex:0 0 auto}
-.prefrow .seg button{min-width:64px;padding:8px 10px}
-.prefrow input{width:96px}
-.linkbtn{background:none;border:0;padding:0;color:var(--cool);text-decoration:underline;text-underline-offset:3px}
-.err{color:var(--warm);font-size:14px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.prefrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.prefrow:first-child{padding-top:0}
+.prefrow:last-child{border-bottom:0;padding-bottom:0}
+.prefrow .seg{margin:0;flex:0 0 auto;width:150px}
+.prefrow .seg button{padding:7px 8px}
+.prefrow input{width:96px;text-align:right}
+.linkbtn{background:none;border:0;padding:0;color:var(--brass);text-decoration:underline;text-underline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
+<div class="backdrop" aria-hidden="true"><img alt="" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Patras_from_the_fortress.jpg/1920px-Patras_from_the_fortress.jpg" onload="this.classList.add('on')" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='https://upload.wikimedia.org/wikipedia/commons/a/a3/Patras_from_the_fortress.jpg'}else{this.remove()}"></div>
 <main class="wrap">
   <header>
-    <h1>Heat plan</h1>
-    <p class="sub">Patras house, four TCL 12,000 BTU mini splits</p>
-    <p class="status" id="status">Loading your plan…</p>
+    <h1>101 Aratou, Patras, Greece <span class="pipe">|</span> Heat Plan</h1>
+    <p class="status" id="status">Loading…</p>
   </header>
   <section id="weather"></section>
   <section id="plan" aria-live="polite"></section>
@@ -143,8 +171,9 @@ input,select{background:var(--bg);border:1px solid var(--line);border-radius:7px
   <section id="bank"></section>
   <section id="whyS"></section>
   <section id="energy" class="energy"></section>
-  <section id="wxsrc"></section>
+  
   <section id="prefs"></section>
+<p class="credit">Background: Patras from the castle, © Guillaume Piolle, <a href="https://commons.wikimedia.org/wiki/File:Patras_from_the_fortress.jpg" target="_blank" rel="noopener">CC BY 3.0</a></p>
 </main>
 <noscript><p style="padding:16px">This page needs JavaScript. Open it from its claude.ai link in the Claude app or a browser.</p></noscript>
 
@@ -154,7 +183,7 @@ input,select{background:var(--bg);border:1px solid var(--line);border-radius:7px
 const LAT=38.2466, LON=21.7346, TZ="Europe/Athens";
 const ROOMS=[
   {id:"bed",name:"Master bedroom",short:"Bedroom",area:18.6},
-  {id:"upl",name:"Upstairs living room",short:"Upstairs living",area:27.9},
+  {id:"upl",name:"Upstairs office/gym",short:"Office/gym",area:27.9},
   {id:"kit",name:"Kitchen",short:"Kitchen",area:18.6},
   {id:"dnl",name:"Downstairs living room",short:"Downstairs living",area:27.9}
 ];
@@ -181,8 +210,8 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 
 /* ---------- local + cloud storage ---------- */
 const LKEY="patrasHeatPlan.v2";
-let local={settings:{unit:"C",away:false,awayDays:false,price:0.16},checkins:[],manual:null};
-try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s){local=Object.assign(local,s);local.settings=Object.assign({unit:"C",away:false,awayDays:false,price:0.16},s.settings||{})}}catch(e){}
+let local={settings:{unit:"F",unitChosen:true,away:false,awayDays:false,price:0.16},checkins:[],manual:null};
+try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s){local=Object.assign(local,s);local.settings=Object.assign({unit:"F",away:false,awayDays:false,price:0.16},s.settings||{});if(!local.settings.unitChosen){local.settings.unit="F";local.settings.unitChosen=true}}}catch(e){}
 function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(local))}catch(e){}}
 const S=()=>local.settings;
 
@@ -247,7 +276,8 @@ function addDays(date,n){const d=new Date(date+"T12:00:00Z");d.setUTCDate(d.getU
 function blockAt(h){return h>=6&&h<10?"morning":h>=10&&h<17?"day":h>=17&&h<23?"evening":"night"}
 const B=id=>BLOCKS.find(b=>b.id===id);
 const nextBlock=id=>BLOCKS[(BLOCKS.findIndex(b=>b.id===id)+1)%4].id;
-const hh=h=>String(h).padStart(2,"0")+":00";
+const hh=h=>((h%12)||12)+(h<12?" AM":" PM");
+const clock=ms=>new Intl.DateTimeFormat("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit",hour12:true}).format(new Date(ms));
 function dayLabel(date){return new Intl.DateTimeFormat("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z"))}
 
 /* ---------- units ---------- */
@@ -341,39 +371,41 @@ function recommend(blockId,wx){
     rooms[r.id]={t:tt,off,raw:tl,n:ev.length};
   });
   const b=blockId;
-  if(b==="morning")why.push("Morning warms the living spaces and kitchen while you get going. Heat set at 06:00 has the house comfortable by the time you’re up.");
-  if(b==="day")why.push("Daytime keeps the main living room comfortable and lets the bedroom idle. The upstairs living room runs a degree below downstairs because warm air climbs the spiral stair.");
-  if(b==="evening")why.push("Evening brings both living rooms up for relaxing and pre-warms the bedroom for later.");
-  if(b==="night")why.push("Overnight the bedroom holds a sleeping temperature and the rest of the house drops a few degrees. Concrete holds heat well, so this small setback recovers cheaply in the morning.");
-  if(s.away&&b==="day")why.push("You’re usually out during the day, so the living spaces and kitchen run "+fmtD(cold?.5:1)+" lower.");
-  if(cold)why.push("It’s below "+fmt(6)+" outside, so the concrete walls run cold. Targets go up a little and the overnight drop is smaller.");
-  if(windy)why.push("Wind up to "+Math.round(wx.windMax)+" km/h pushes cold air through gaps, so targets nudge up. Close curtains on the windward side.");
-  if(sunny)why.push("Sun is expected. Open the curtains and let the concrete soak up free heat; the living rooms come down a touch to make room for it.");
-  if(b==="night"||b==="evening")why.push("Close curtains and blinds after dark. Windows are where the house loses heat fastest.");
-  if(offRooms.length)why.push("It’s mild enough that the "+offRooms.join(" and ")+" can stay off. The concrete will carry the day’s warmth.");
-  if(learnedRooms.length)why.push("Your check-ins are shaping the "+learnedRooms.join(", ")+" for this time of day.");
-  why.push("Use TURBO only when a room is 3°C or more below its target, for 15 to 20 minutes, then switch it off.");
+  // tips: one that fits right now, plus two from a general pool; the mix changes every hour
+  const now=[];
+  if(cold)now.push("Cold outside, so targets are nudged up.");
+  if(windy)now.push("Windy: close the curtains on the windward side.");
+  if(sunny)now.push("Sunny: open the curtains for free heat.");
+  if(b==="night"||b==="evening")now.push("Close curtains and blinds after dark.","Upstairs gets free heat up the stair, so it runs a degree lower.");
+  if(b==="morning")now.push("Open the curtains once the sun is up.");
+  if(offRooms.length)now.push("Mild enough to leave the "+offRooms.join(" and ")+" off.");
+  if(learnedRooms.length)now.push("Your check-ins are tuning the "+learnedRooms.join(", ")+".");
+  const pool=["Keep doors to unused rooms closed.","Clean the mini split filters once a month.","Rugs on the tile floors make rooms feel warmer at the same setting.",
+    "Steady settings beat big swings in a concrete house.","Keep Mode on HEAT, not AUTO.","Aim the up/down flap at the floor: warm air rises.",
+    "Use TURBO for 15 to 20 minutes at most, then switch it off.","Log a check-in when a room feels off; the plan learns from it.",
+    "Keep furniture and curtains clear of each unit’s airflow.","Seal drafts around the windows and balcony doors.","Each degree lower saves about 3% on heating.",
+    "Fan on AUTO is quieter and more efficient than a fixed speed."];
+  // one tip at a time: even hours show one that fits right now, odd hours one from the pool
+  const k=Math.floor(Date.now()/3600e3),j=Math.floor(k/2);
+  why.push(now.length&&k%2===0?now[j%now.length]:pool[j%pool.length]);
   return {rooms,why};
 }
+const PWR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-label="Power"><path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>';
 function bundle(r,blockId,x){
   const s=S();
-  if(s.awayDays)return {rows:[
-    ["⏻","On","",true],
-    ["ECO/DISPLAY + HEALTH/CLEAN","<b>8°C heat</b>","Press both together. Keeps the house from getting damp and cold while you’re away for days."],
-  ],off:"everything else"};
-  if(x.off)return {rows:[["⏻","<b>Off</b>","Mild enough to rest. If it feels cold, turn it on at "+fmt(x.t)+" and log a check-in so the plan learns.",true]],off:null};
+  if(s.awayDays)return {rows:[[PWR,"On","",true],["ECO + HEALTH","<b>8°C heat</b>","Press both together"]],off:null};
+  if(x.off)return {rows:[[PWR,"<b>Off</b>","",true]],off:null};
   const bedNight=r.id==="bed"&&(blockId==="night");
   const wide=r.id==="upl"||r.id==="dnl";
   return {rows:[
-    ["⏻","On","",true],
-    ["MODE","<b>HEAT</b>","Not AUTO, which can switch to cooling."],
-    ["▲ ▼","<b>"+fmt(x.t)+"</b>",S().unit==="F"?Math.round(x.t)+"°C on the remote":""],
-    ["FAN","<b>"+(bedNight?"MUTE":"AUTO")+"</b>",bedNight?"Quietest for sleeping.":"Speeds up to catch up, then slows to hold."],
-    ["Up/down flap<br>(left of FAN)","<b>Lowest, no swing</b>","Warm air rises, so aim it at the floor."],
-    ["Left/right flap<br>(right of FAN)","<b>"+(wide?"Swing":"Fixed, center")+"</b>",wide?"Spreads heat along the long room.":(r.id==="bed"?"Aim it away from the bed.":"")],
-    ["I FEEL","<b>On</b>","Reads the temperature at the remote, so leave the remote where you sit"+(r.id==="bed"?" or sleep":"")+", in this room."],
-    ["ECO/DISPLAY","<b>Eco off</b>"+(bedNight?", <b>display off</b>":""),"The plan already trims the temperature; Eco would second-guess it."]
-  ],off:"TURBO, GEN, TIMER/SLEEP, GENTLE WIND, HEALTH/CLEAN, Chill/Hot wind, 8°C heat"};
+    [PWR,"On","",true],
+    ["MODE","<b>HEAT</b>",""],
+    ["▲ ▼","<b class=\""+tc(x.t)+"\">"+fmt(x.t)+"</b>",""],
+    ["FAN","<b>"+(bedNight?"MUTE":"AUTO")+"</b>",""],
+    ["Up/down flap","<b>Lowest</b>",""],
+    ["Left/right flap","<b>"+(wide?"Swing":"Center")+"</b>",r.id==="bed"?"Away from the bed":""],
+    ["I FEEL","<b>On</b>",""]
+  ],off:null};
 }
 function energy(rec,wx){
   const UA=190;let on=0,sum=0;
@@ -385,13 +417,21 @@ function energy(rec,wx){
 }
 
 /* ---------- render ---------- */
-const hue=t=>205-(clamp(t,16,24)-16)/8*177;
-const stairSvg='<svg viewBox="0 0 34 300" preserveAspectRatio="none" aria-hidden="true"><line x1="17" y1="0" x2="17" y2="300" stroke="#59626b" stroke-width="2"/><path d="M17 6 C 33 26,33 46,17 66 S 1 106,17 126 S 33 166,17 186 S 1 226,17 246 S 33 286,17 300" fill="none" stroke="#8a948f" stroke-width="1.6" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>';
+// cool setpoints read steel blue, warm ones amber; never green
+// setpoints: 18°C (64°F) and below cool, 19–21°C (66–70°F) warm, 22°C (72°F) and up hot
+const tier=t=>t<=18.5?"cool":t<21.5?"warm":"hot";
+// outside: below 15°C (59°F) cool, up to 26°C (79°F) warm, above that hot
+const tierOut=t=>t<15?"cool":t<=26?"warm":"hot";
+const TIER={cool:[210,"60%"],warm:[28,"85%"],hot:[4,"78%"]};
+const hue=t=>TIER[tier(t)][0];
+const sat=t=>TIER[tier(t)][1];
+const tc=(t,out)=>"t-"+(out?tierOut(t):tier(t));
+const stairSvg='<svg viewBox="0 0 22 300" preserveAspectRatio="none" aria-hidden="true"><path d="M11 6 C 21 26,21 46,11 66 S 1 106,11 126 S 21 166,11 186 S 1 226,11 246 S 21 286,11 300" fill="none" stroke="#9aa1a8" stroke-width="1.2" stroke-dasharray="2 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
 function roomBtn(r,x){
   const away=S().awayDays;
   const big=away?"8°":x.off?"Off":(S().unit==="F"?Math.round(toF(x.t)):x.t)+"°";
-  const sub=away?"8°C heat":x.off?"Leave it resting":(x.n?"Tuned by "+x.n+" check-in"+(x.n>1?"s":""):"Heat, fan Auto");
-  return '<button class="room'+(x.off&&!away?" off":"")+(sel===r.id?" sel":"")+'" data-room="'+r.id+'" style="grid-area:'+r.id+';--h:'+hue(away?16:x.t).toFixed(0)+'" aria-expanded="'+(sel===r.id)+'">'+
+  const sub=away?"8°C heat":x.off?"Resting":(x.n?"Tuned by "+x.n+" check-in"+(x.n>1?"s":""):"Heat, fan Auto");
+  return '<button class="room'+(x.off&&!away?" off":"")+(sel===r.id?" sel":"")+'" data-room="'+r.id+'" style="grid-area:'+r.id+';--h:'+hue(away?16:x.t).toFixed(0)+';--s:'+sat(away?16:x.t)+'" aria-expanded="'+(sel===r.id)+'">'+
     '<span class="rname">'+r.name+'</span><span class="rset">'+big+'</span><span class="rsub">'+sub+'</span></button>';
 }
 function skyWord(wx){if(!wx.daylight)return "After dark";return wx.sun>=.6?"Mostly sunny":wx.sun>=.3?"Some sun":"Cloudy"}
@@ -407,39 +447,37 @@ function render(){
   // status
   const st=$("status");st.className="status";
   const today=dayRec(p.date);
-  if(wx.src==="live"){st.classList.add("live");st.textContent="Live Patras weather, refreshed hourly. Plan updates on the hour."}
-  else if(wx.src==="claude"){st.classList.add("live");st.textContent="Using the forecast Claude loaded"+(cloud.forecast&&cloud.forecast.updated?" on "+dayLabel(cloud.forecast.updated):"")+". Plan updates on the hour."}
-  else if(wx.src==="manual"){st.textContent="Using the forecast you entered for today. Plan updates on the hour."}
-  else{st.classList.add("warn");st.textContent="No forecast for today yet, so this uses typical November weather. Add today’s low and high below for a sharper plan."}
-  if(S().awayDays){st.className="status warn";st.textContent="Away mode is on: every unit holds 8°C. Turn it off in Settings when you’re back."}
+  if(wx.src==="live"){st.classList.add("live");st.textContent="Live weather, updated "+clock(live.fetchedAt)}
+  else if(wx.src==="claude"){st.classList.add("live");st.textContent="Forecast loaded by Claude"}
+  else if(wx.src==="manual"){st.textContent="Your forecast for today"}
+  else{st.classList.add("warn");st.textContent="No forecast yet. Add today’s below."}
+  if(S().awayDays){st.className="status warn";st.textContent="Away mode: every unit at 8°C"}
 
   const nowT=live&&live.current?live.current.temperature_2m:hourWx(p.date,p.h).t;
-  $("weather").innerHTML='<div class="wx"><div class="now">'+fmt(nowT)+'<small>'+(live?"Outside now":"Outside, estimated")+'</small></div>'+
-    '<div class="row">Until '+hh(B(curB).end)+': <b>'+fmt(wx.min)+' to '+fmt(wx.max)+'</b></div>'+
-    '<div class="row">Today '+fmt(today.low)+' to '+fmt(today.high)+', wind up to <b>'+Math.round(wx.windMax)+' km/h</b></div>'+
+  $("weather").innerHTML='<div class="wx"><div class="now '+tc(nowT,true)+'">'+fmt(nowT).replace(/°[CF]/,"°")+'<small>Outside</small></div>'+
+    '<div class="row"><b>'+fmt(wx.min).replace(/°[CF]/,"°")+' – '+fmt(wx.max).replace(/°[CF]/,"°")+'</b> until '+hh(B(curB).end)+'</div>'+
+    '<div class="row">Wind '+Math.round(wx.windMax)+' km/h</div>'+
     '<div class="row">'+skyWord(wx)+'</div></div>';
 
-  let plan='<div class="periodline"><h2>Set each unit to</h2><span>'+B(curB).name+", until "+hh(B(curB).end)+'</span></div>'+
+  let plan='<div class="periodline"><h2>Now</h2><span>'+B(curB).name+", until "+hh(B(curB).end)+'</span></div>'+
     '<div class="xsec"><div class="floorlab u">Upstairs</div>'+roomBtn(ROOMS[0],rec.rooms.bed)+'<div class="stair">'+stairSvg+'</div>'+roomBtn(ROOMS[1],rec.rooms.upl)+
     '<div class="slab l"></div><div class="slab r"></div><div class="floorlab d">Downstairs</div>'+roomBtn(ROOMS[2],rec.rooms.kit)+roomBtn(ROOMS[3],rec.rooms.dnl)+'<div class="ground"></div></div>';
-  plan+=sel?panelHtml(curB,rec,wx):'<p class="caption">Tap a room for the full remote settings and to log how it felt.</p>';
+  plan+=sel?panelHtml(curB,rec,wx):'<p class="caption">Tap a room for its remote settings</p>';
   $("plan").innerHTML=plan;
 
   const lines=ROOMS.map(r=>{
     const a=rec.rooms[r.id],b=recN.rooms[r.id];let d;
     if(a.off!==b.off)d=b.off?"turn off":"turn on";else if(!b.off&&b.t!==a.t)d=(b.t>a.t?"up ":"down ")+fmtD(Math.abs(b.t-a.t));else d="no change";
-    return '<li><span>'+r.name+'</span><span class="v">'+(b.off?"Off":fmt(b.t))+'<span class="d">'+d+'</span></span></li>';
+    return '<li><span>'+r.name+'</span><span class="v'+(b.off?"":" "+tc(b.t))+'">'+(b.off?"Off":fmt(b.t))+'<span class="d">'+d+'</span></span></li>';
   }).join("");
-  $("next").innerHTML=S().awayDays?"":'<h2>At '+hh(B(nb).start)+', '+B(nb).name.toLowerCase()+'</h2><ul class="switch">'+lines+'</ul>';
+  $("next").innerHTML=S().awayDays?"":'<div class="periodline"><h2>Next</h2><span>'+B(nb).name+', from '+hh(B(nb).start)+'</span></div><ul class="switch">'+lines+'</ul>';
 
   renderBank();
-  $("whyS").innerHTML=S().awayDays?"":'<h2>Why these numbers</h2><ul class="why-list">'+rec.why.map(s=>"<li>"+s+"</li>").join("")+"</ul>";
+  $("whyS").innerHTML=(S().awayDays||!rec.why.length)?"":'<h2>Tip</h2><ul class="why-list">'+rec.why.map(s=>"<li>"+s+"</li>").join("")+"</ul>";
   const e=energy(rec,wx);
-  $("energy").innerHTML='<h2>Energy until '+hh(B(curB).end)+'</h2>'+(!e?'<p>Little or no heating needed in this stretch.</p>':
-    '<p class="big">≈ '+e.kwh.toFixed(1)+' kWh<span>about €'+(e.kwh*S().price).toFixed(2)+'</span></p>'+
-    '<p>At the coldest hour the four units together run near '+Math.max(1,e.pct)+'% of capacity. Low, steady output is where inverter units are most efficient.</p>'+
-    '<p class="small">Rough estimate from typical heat loss for a concrete house this size. Your meter is the real test.</p>');
-  renderWxSrc(p);
+  $("energy").innerHTML='<h2>Energy until '+hh(B(curB).end)+'</h2>'+(!e?'<p class="small">Little or no heating needed.</p>':
+    '<p class="big">'+e.kwh.toFixed(1)+' kWh<span>≈ €'+(e.kwh*S().price).toFixed(2)+'</span></p>'+
+    '<p class="small">Rough estimate</p>');
   renderPrefs();
 }
 
@@ -453,10 +491,10 @@ function panelHtml(blockId,rec,wx){
   const rb=(v,l,c)=>'<button type="button" class="'+c+'" data-rate="'+v+'" aria-pressed="'+(draft.rating===v)+'">'+l+'</button>';
   return '<div class="panel"><div class="panel-head"><h3>'+r.name+'</h3><span>'+B(blockId).name+'</span></div>'+
     '<ul class="remote">'+rows+'</ul>'+(bd.off?'<div class="leaveoff">Leave off: <b>'+bd.off+'</b></div>':"")+
-    '<div class="checkin"><h3>How did it feel?</h3><p class="small">Log what the unit was actually on, even if it wasn’t the plan. Every check-in goes into your knowledge bank.</p>'+
+    '<div class="checkin"><h3>How does it feel?</h3>'+
     '<div class="fields"><label>Set to<select id="ciTemp">'+tOpts.join("")+'</select></label><label>Fan<select id="ciFan">'+fans+'</select></label></div>'+
     '<div class="seg">'+rb("cold","Too cold","cold")+rb("right","Just right","right")+rb("warm","Too warm","warm")+'</div>'+
-    '<label>Note (optional)<input id="ciNote" maxlength="160" placeholder="e.g. drafty by the balcony door" value="'+esc(draft.note)+'"></label>'+
+    '<label>Note<input id="ciNote" maxlength="160" placeholder="Optional" value="'+esc(draft.note)+'"></label>'+
     '<button class="primary" data-act="saveCheckin"'+(draft.rating?"":" disabled")+'>Save check-in</button>'+
     '<p class="toast">'+esc(toast)+'</p>'+(lastError?'<p class="err">'+esc(lastError)+'</p>':"")+'</div></div>';
 }
@@ -465,8 +503,7 @@ function renderBank(){
   const all=bank();
   let html='<h2>Knowledge bank</h2>';
   if(!all.length){
-    html+='<div class="card"><p>Nothing logged yet. Tap a room, set what you actually used, and say how it felt. A couple of check-ins a day is plenty; the plan shifts each room toward what’s worked.</p>'+
-      (cloud.ready?'<p class="small" style="margin:0">Your bank is saved to your account, so Claude can read it when you ask for a review in chat.</p>':'<p class="small" style="margin:0">Saved in this browser.</p>')+'</div>';
+    html+='<div class="card"><p class="small" style="margin:0">No check-ins yet. Tap a room to log one.</p></div>';
     $("bank").innerHTML=html;return;
   }
   const items=[];
@@ -485,15 +522,15 @@ function renderBank(){
     if(lines.length)items.push('<li><span class="rm">'+r.name+'</span><div class="ln">'+lines.join("<br>")+'</div></li>');
   });
   const recent=all.slice(0,8).map(e=>{
-    const r=ROOMS.find(x=>x.id===e.room);const when=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(e.at));
+    const r=ROOMS.find(x=>x.id===e.room);const when=new Intl.DateTimeFormat("en-US",{timeZone:TZ,weekday:"short",hour:"numeric",minute:"2-digit",hour12:true}).format(new Date(e.at));
     const rate={cold:"Too cold",right:"Just right",warm:"Too warm"}[e.rating]||"";
     return '<li><span><span class="r-'+e.rating+'">'+rate+'</span>, '+(r?r.short:e.room)+' at '+(e.setTemp==null?"off":fmt(e.setTemp))+(e.fan?", fan "+esc(e.fan):"")+
-      '<span class="meta">'+when+', outside about '+fmt(e.outMean)+'</span>'+(e.note?'<span class="note">“'+esc(e.note)+'”</span>':"")+'</span>'+
+      '<span class="meta">'+when+', '+fmt(e.outMean)+' outside</span>'+(e.note?'<span class="note">“'+esc(e.note)+'”</span>':"")+'</span>'+
       '<button class="x" data-del="'+esc(e.id)+'" aria-label="Delete this check-in">×</button></li>';
   }).join("");
   html+='<div class="card"><h3>What’s worked</h3><ul class="worked">'+items.join("")+'</ul>'+
-    '<h3 style="margin-top:14px">Recent check-ins</h3><ul class="log">'+recent+'</ul>'+
-    '<p class="small" style="margin:10px 0 0">'+all.length+' check-in'+(all.length>1?"s":"")+' in total. '+(cloud.ready?"Ask Claude in chat to review your bank and it can tune the plan’s starting points.":"Saved in this browser.")+'</p>'+(cloud.ready?"":'<a class="ghost" style="display:inline-block;margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="'+claudeLink(all)+'">Send my bank to Claude</a>')+'</div>';
+    '<h3 style="margin-top:14px">Recent</h3><ul class="log">'+recent+'</ul>'+
+    '<p class="small" style="margin:10px 0 0">'+all.length+' check-in'+(all.length>1?"s":"")+'</p>'+(cloud.ready?"":'<a class="ghost" style="display:inline-block;margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="'+claudeLink(all)+'">Send my bank to Claude</a>')+'</div>';
   $("bank").innerHTML=html;
 }
 
@@ -504,19 +541,18 @@ function claudeLink(all){
 }
 function renderWxSrc(p){
   const m=manual();const isToday=m&&m.date===p.date;const f=cloud.forecast;
-  let html='<h2>Weather source</h2><div class="card">';
-  if(live)html+='<p>Live hourly weather from Open-Meteo, last refreshed '+new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(live.fetchedAt))+'.</p>';
-  else html+='<p class="small">Pages on claude.ai can’t reach weather services directly, so the plan builds each hour from a daily low and high. Ask Claude in chat to “update the heat plan forecast” and it will load the coming week here.</p>';
+  if(live){$("wxsrc").innerHTML="";return}
+  let html='<h2>Weather</h2><div class="card">';
   if(f&&Array.isArray(f.days)){
     const rows=f.days.filter(d=>d.date>=p.date).slice(0,7).map(d=>'<tr><td>'+dayLabel(d.date)+'</td><td>'+fmt(d.low)+' to '+fmt(d.high)+', '+esc(d.sky||"")+'</td></tr>').join("");
     if(rows)html+='<table class="fc">'+rows+'</table>';
   }
   const u=S().unit;
-  html+='<form id="mform" style="margin-top:14px"><h3>'+(isToday?"Update today’s forecast":"Enter today’s forecast")+'</h3><div class="fields"><label>Low today (°'+u+')<input name="low" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.low):m.low):"")+'"></label>'+
-    '<label>High today (°'+u+')<input name="high" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.high):m.high):"")+'"></label>'+
+  html+='<form id="mform" style="margin-top:14px"><h3>'+(isToday?"Today’s forecast":"Add today’s forecast")+'</h3><div class="fields"><label>Low (°'+u+')<input name="low" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.low):m.low):"")+'"></label>'+
+    '<label>High (°'+u+')<input name="high" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.high):m.high):"")+'"></label>'+
     '<label>Sky<select name="sky">'+["sunny","mixed","overcast","rain"].map(s=>'<option value="'+s+'"'+((isToday?m.sky:"mixed")===s?" selected":"")+'>'+{sunny:"Sunny",mixed:"Some sun",overcast:"Overcast",rain:"Rain"}[s]+'</option>').join("")+'</select></label>'+
     '<label>Wind<select name="wind">'+["calm","breezy","windy"].map(s=>'<option value="'+s+'"'+((isToday?m.wind:"breezy")===s?" selected":"")+'>'+{calm:"Calm",breezy:"Breezy",windy:"Windy, 30+ km/h"}[s]+'</option>').join("")+'</select></label></div>'+
-    '<button class="primary" type="submit">Use this forecast</button></form>';
+    '<button class="primary" type="submit">Save forecast</button></form>';
   html+='</div>';
   $("wxsrc").innerHTML=html;
 }
@@ -525,10 +561,10 @@ function renderPrefs(){
   const s=S();
   const seg=(attr,opts,cur)=>'<div class="seg">'+opts.map(([v,l])=>'<button type="button" data-'+attr+'="'+v+'" aria-pressed="'+(String(cur)===String(v))+'">'+l+'</button>').join("")+'</div>';
   $("prefs").innerHTML='<h2>Settings</h2><div class="card">'+
-    '<div class="prefrow"><span>Show temperatures in</span>'+seg("unit",[["C","°C"],["F","°F"]],s.unit)+'</div>'+
-    '<div class="prefrow"><span>During the day I’m usually</span>'+seg("away",[["0","Home"],["1","Out"]],s.away?1:0)+'</div>'+
-    '<div class="prefrow"><span>Away for several days</span>'+seg("awaydays",[["0","No"],["1","Yes"]],s.awayDays?1:0)+'</div>'+
-    '<div class="prefrow"><label for="price" style="color:var(--text);font-size:16px;flex-direction:row">Electricity, € per kWh</label><input id="price" type="number" inputmode="decimal" step="0.01" min="0" value="'+s.price+'"></div>'+
+    '<div class="prefrow"><span>Units</span>'+seg("unit",[["F","°F"],["C","°C"]],s.unit)+'</div>'+
+    '<div class="prefrow"><span>Daytime</span>'+seg("away",[["0","Home"],["1","Out"]],s.away?1:0)+'</div>'+
+    '<div class="prefrow"><span>Away mode</span>'+seg("awaydays",[["0","Off"],["1","On"]],s.awayDays?1:0)+'</div>'+
+    '<div class="prefrow"><label for="price" style="color:var(--text);font-size:14.5px;font-weight:400;flex-direction:row">Price per kWh (€)</label><input id="price" type="number" inputmode="decimal" step="0.01" min="0" value="'+s.price+'"></div>'+
   '</div>';
 }
 function safeRender(){
@@ -549,7 +585,7 @@ document.addEventListener("click",async ev=>{
   if(b.dataset.room){liveDraft();sel=sel===b.dataset.room?null:b.dataset.room;draft=null;toast="";lastError="";safeRender();return}
   if(b.dataset.rate){liveDraft();draft.rating=b.dataset.rate;safeRender();return}
   if(b.dataset.del){if(confirm("Delete this check-in from your bank?"))await delCheckin(b.dataset.del);return}
-  if(b.dataset.unit){S().unit=b.dataset.unit;saveState();safeRender();return}
+  if(b.dataset.unit){S().unit=b.dataset.unit;S().unitChosen=true;saveState();safeRender();return}
   if(b.dataset.away){S().away=b.dataset.away==="1";saveState();safeRender();return}
   if(b.dataset.awaydays){S().awayDays=b.dataset.awaydays==="1";saveState();safeRender();return}
   if(b.dataset.act==="saveCheckin"){
@@ -561,7 +597,7 @@ document.addEventListener("click",async ev=>{
     b.disabled=true;
     await addCheckin(c);
     const r=ROOMS.find(x=>x.id===draft.room);
-    toast="Saved to your bank. The "+r.short.toLowerCase()+" plan takes it into account from now on.";
+    toast="Saved";
     draft=Object.assign({},draft,{rating:null,note:""});
     safeRender();return;
   }
@@ -591,5 +627,6 @@ initCloud();
 tryLive();
 })();
 </script>
+<script>if("serviceWorker" in navigator&&/github\.io$/.test(location.hostname)){navigator.serviceWorker.register("sw.js").catch(()=>{})}</script>
 </body>
 </html>
