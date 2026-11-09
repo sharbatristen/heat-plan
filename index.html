@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patras heat plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#15181b; --surface:#1e2226; --surface2:#262b30; --line:#363c43;
+  --text:#ece9e2; --muted:#9aa19f; --faint:#6c7370;
+  --warm:#f0a93b; --cool:#79b4d6; --good:#9cc59a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="dark"]{color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:680px;margin:0 auto;padding:22px 16px 56px}
+h1{font-size:clamp(34px,9vw,52px);font-stretch:68%;font-weight:800;line-height:.95;margin:0;letter-spacing:-.01em}
+h2{font-size:19px;font-weight:650;margin:0 0 10px;font-stretch:90%}
+h3{font-size:16px;font-weight:650;margin:0 0 6px}
+p{margin:0 0 10px}
+.sub{color:var(--muted);margin-top:6px}
+.status{font-size:14px;color:var(--muted);margin-top:12px;padding-left:12px;border-left:3px solid var(--faint)}
+.status.live{border-color:var(--cool)}
+.status.warn{border-color:var(--warm);color:var(--text)}
+section{margin-top:28px}
+.small{font-size:13.5px;color:var(--muted)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+
+.wx{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.wx .now{font-size:44px;font-stretch:70%;font-weight:700;line-height:1;grid-row:span 3}
+.wx .now small{display:block;font-size:13px;font-weight:400;font-stretch:100%;color:var(--muted);margin-top:6px}
+.wx .row{font-size:15px}
+.wx .row b{font-weight:600}
+
+.periodline{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.periodline span{color:var(--muted);font-size:14px}
+.xsec{display:grid;grid-template-columns:minmax(0,2fr) 34px minmax(0,3fr);
+  grid-template-areas:"floorU floorU floorU" "bed stair upl" "slabL stair slabR" "floorD floorD floorD" "kit stair dnl" "ground ground ground";
+  gap:0 6px;margin-top:6px}
+.floorlab{font-size:12.5px;color:var(--faint);padding:8px 0 4px}
+.floorlab.u{grid-area:floorU}.floorlab.d{grid-area:floorD}
+.slab{height:12px;margin-top:6px;background:repeating-linear-gradient(135deg,#4a525a 0 2px,#2d3338 2px 7px);border-top:1px solid #59626b;border-bottom:1px solid #59626b}
+.slab.l{grid-area:slabL}.slab.r{grid-area:slabR}
+.ground{grid-area:ground;height:14px;margin-top:6px;background:repeating-linear-gradient(135deg,#3c4349 0 1.5px,transparent 1.5px 6px);border-top:2px solid #6a737b}
+.stair{grid-area:stair;display:flex;align-items:stretch;justify-content:center}
+.stair svg{width:34px;height:100%}
+.room{--h:200;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:4px;min-height:136px;padding:12px;border-radius:3px;
+  border:1.5px solid hsla(var(--h),70%,62%,.55);background:hsla(var(--h),55%,42%,.15);transition:background .2s}
+.room:hover{background:hsla(var(--h),55%,42%,.24)}
+.room.sel{outline:2px solid var(--text);outline-offset:2px}
+.rname{font-size:13.5px;color:var(--muted);line-height:1.25}
+.rset{font-size:clamp(42px,12vw,64px);font-stretch:66%;font-weight:750;line-height:.95;color:hsl(var(--h),85%,73%);margin-top:auto}
+.rsub{font-size:13px;color:var(--muted)}
+.room.off{border-style:dashed;border-color:var(--line);background:transparent}
+.room.off .rset{color:var(--faint);font-size:clamp(34px,9vw,48px)}
+.caption{margin-top:12px;font-size:14px;color:var(--muted)}
+
+/* remote bundle */
+.panel{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 16px 8px}
+.panel-head span{color:var(--muted);font-size:14px}
+.remote{list-style:none;margin:0;padding:0 16px 6px}
+.remote li{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.key{justify-self:start;display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:3px 12px;border-radius:999px;background:#e9e7e1;color:#2a2d30;font-size:12.5px;font-weight:600;line-height:1.15;text-align:center}
+.key.pw{color:#c8362f}
+.val{font-size:15px}
+.val b{font-size:20px;font-stretch:80%;font-weight:700}
+.val .why{display:block;font-size:13px;color:var(--muted)}
+.leaveoff{padding:10px 16px 14px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.leaveoff b{color:var(--text);font-weight:600}
+
+/* check-in */
+.checkin{padding:14px 16px 16px;background:var(--surface2);border-top:1px solid var(--line)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+label{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:10px;font-size:16px;color:var(--text);width:100%}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.seg button{flex:1 1 0;min-width:84px;padding:10px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.seg button.cold{border-color:hsla(205,60%,60%,.6)}
+.seg button.warm{border-color:hsla(35,80%,55%,.6)}
+.seg button.right{border-color:hsla(110,30%,60%,.6)}
+.seg button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.primary{margin-top:12px;width:100%;padding:12px;border-radius:8px;border:0;background:var(--warm);color:#1b1408;font-weight:650}
+.primary:disabled{opacity:.45;cursor:default}
+.ghost{padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:transparent}
+.toast{font-size:14px;color:var(--good);margin:8px 0 0;min-height:1.2em}
+
+.switch{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.switch li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch .v{font-weight:650;white-space:nowrap}
+.switch .d{color:var(--muted);font-size:14px;margin-left:8px;font-weight:400}
+.why-list{margin:0;padding-left:18px}
+.why-list li{margin-bottom:8px}
+.energy .big{font-size:34px;font-stretch:72%;font-weight:700;line-height:1.1;margin-bottom:6px}
+.energy .big span{font-size:16px;font-stretch:100%;font-weight:400;color:var(--muted);margin-left:6px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.worked{list-style:none;padding:0;margin:0}
+.worked li{padding:10px 0;border-bottom:1px solid var(--line)}
+.worked li:last-child{border-bottom:0}
+.worked .rm{font-weight:600}
+.worked .ln{font-size:14.5px;color:var(--muted)}
+.log{list-style:none;padding:0;margin:10px 0 0}
+.log li{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px}
+.log .meta{color:var(--muted);font-size:13px}
+.log .note{display:block;color:var(--text);font-style:italic}
+.x{background:none;border:0;color:var(--faint);font-size:20px;line-height:1;padding:4px 8px}
+.r-cold{color:var(--cool)}.r-right{color:var(--good)}.r-warm{color:var(--warm)}
+.fc{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:10px}
+.fc td{padding:6px 0;border-top:1px solid var(--line)}
+.fc td:last-child{text-align:right;color:var(--muted)}
+.prefrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.prefrow:last-child{border-bottom:0}
+.prefrow .seg{margin:0;flex:0 0 auto}
+.prefrow .seg button{min-width:64px;padding:8px 10px}
+.prefrow input{width:96px}
+.linkbtn{background:none;border:0;padding:0;color:var(--cool);text-decoration:underline;text-underline-offset:3px}
+.err{color:var(--warm);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Heat plan</h1>
+    <p class="sub">Patras house, four TCL 12,000 BTU mini splits</p>
+    <p class="status" id="status">Loading your plan…</p>
+  </header>
+  <section id="weather"></section>
+  <section id="plan" aria-live="polite"></section>
+  <section id="next"></section>
+  <section id="bank"></section>
+  <section id="whyS"></section>
+  <section id="energy" class="energy"></section>
+  <section id="wxsrc"></section>
+  <section id="prefs"></section>
+</main>
+<noscript><p style="padding:16px">This page needs JavaScript. Open it from its claude.ai link in the Claude app or a browser.</p></noscript>
+
+<script>
+(function(){
+"use strict";
+const LAT=38.2466, LON=21.7346, TZ="Europe/Athens";
+const ROOMS=[
+  {id:"bed",name:"Master bedroom",short:"Bedroom",area:18.6},
+  {id:"upl",name:"Upstairs living room",short:"Upstairs living",area:27.9},
+  {id:"kit",name:"Kitchen",short:"Kitchen",area:18.6},
+  {id:"dnl",name:"Downstairs living room",short:"Downstairs living",area:27.9}
+];
+const HEATED=ROOMS.reduce((a,r)=>a+r.area,0);
+const BLOCKS=[
+  {id:"morning",name:"Morning",start:6,end:10},
+  {id:"day",name:"Daytime",start:10,end:17},
+  {id:"evening",name:"Evening",start:17,end:23},
+  {id:"night",name:"Overnight",start:23,end:6}
+];
+const BASE={
+  morning:{bed:19,upl:20,kit:20,dnl:20},
+  day:{bed:18,upl:19,kit:19,dnl:20},
+  evening:{bed:19,upl:20,kit:19,dnl:20},
+  night:{bed:19,upl:17,kit:17,dnl:17}
+};
+// Rough monthly normals for Patras (°C), used only when no forecast is loaded
+const NORMALS={1:[6,14],2:[6,15],3:[8,17],4:[11,20],5:[15,25],6:[19,29],7:[22,32],8:[22,32],9:[19,28],10:[15,23],11:[11,18],12:[8,15]};
+const SKY_SUN={sunny:.8,mixed:.45,overcast:.12,rain:.05};
+const WIND_KMH={calm:10,breezy:22,windy:38};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- local + cloud storage ---------- */
+const LKEY="patrasHeatPlan.v2";
+let local={settings:{unit:"C",away:false,awayDays:false,price:0.16},checkins:[],manual:null};
+try{const s=JSON.parse(localStorage.getItem(LKEY)||"null");if(s){local=Object.assign(local,s);local.settings=Object.assign({unit:"C",away:false,awayDays:false,price:0.16},s.settings||{})}}catch(e){}
+function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify(local))}catch(e){}}
+const S=()=>local.settings;
+
+const cloud={db:null,uid:null,ready:false,forecast:null,checkins:null,manual:null,settingsLoaded:false};
+let live=null; // {fetchedAt, hourly, current}
+let sel=null, draft=null, toast="", lastError="";
+
+function bank(){return cloud.checkins||local.checkins}
+function manual(){return cloud.manual||local.manual}
+
+async function initCloud(){
+  try{
+    if(!window.claude||typeof window.claude.use!=="function")return;
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user)return;
+    const uid=await user.id();if(!uid)return;
+    cloud.db=db;cloud.uid=uid;
+    db.doc("weather/forecast").onSnapshot(s=>{cloud.forecast=s.exists?s.data():null;safeRender()},()=>{});
+    db.collection("data/users/"+uid+"/bank/checkins").onSnapshot(q=>{
+      cloud.checkins=q.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>b.at-a.at);safeRender();
+    },()=>{});
+    db.doc("data/users/"+uid+"/state").onSnapshot(s=>{
+      if(s.exists){const d=s.data();if(d.settings&&!cloud.settingsLoaded){local.settings=Object.assign(local.settings,d.settings);saveLocal()}cloud.manual=d.manual||null}
+      cloud.settingsLoaded=true;safeRender();
+    },()=>{});
+    cloud.ready=true;
+    // move any check-ins saved only in this browser into the bank
+    if(local.checkins.length){
+      const col=db.collection("data/users/"+uid+"/bank/checkins");
+      for(const c of local.checkins.slice()){try{const {id,...body}=c;await col.doc(id).set(body)}catch(e){break}}
+      local.checkins=[];saveLocal();
+    }
+  }catch(e){}
+}
+let stateTimer=null;
+function saveState(){
+  saveLocal();
+  if(!cloud.db)return;
+  clearTimeout(stateTimer);
+  stateTimer=setTimeout(()=>{cloud.db.doc("data/users/"+cloud.uid+"/state").set({settings:local.settings,manual:manual()||null,updated:Date.now()}).catch(()=>{})},800);
+}
+async function addCheckin(c){
+  const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  if(cloud.db){
+    try{await cloud.db.collection("data/users/"+cloud.uid+"/bank/checkins").doc(id).set(c);return true}
+    catch(e){lastError="Couldn’t save to your bank just now; saved in this browser instead."}
+  }
+  local.checkins.unshift(Object.assign({id},c));saveLocal();return true;
+}
+async function delCheckin(id){
+  if(cloud.db&&cloud.checkins){try{await cloud.db.collection("data/users/"+cloud.uid+"/bank/checkins").doc(id).delete();return}catch(e){}}
+  local.checkins=local.checkins.filter(c=>c.id!==id);saveLocal();safeRender();
+}
+
+/* ---------- time ---------- */
+function parts(d){
+  const f=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+  const p={};f.formatToParts(d||new Date()).forEach(x=>p[x.type]=x.value);
+  return {date:p.year+"-"+p.month+"-"+p.day,h:+p.hour,mi:+p.minute,mo:+p.month};
+}
+function addDays(date,n){const d=new Date(date+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}
+function blockAt(h){return h>=6&&h<10?"morning":h>=10&&h<17?"day":h>=17&&h<23?"evening":"night"}
+const B=id=>BLOCKS.find(b=>b.id===id);
+const nextBlock=id=>BLOCKS[(BLOCKS.findIndex(b=>b.id===id)+1)%4].id;
+const hh=h=>String(h).padStart(2,"0")+":00";
+function dayLabel(date){return new Intl.DateTimeFormat("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z"))}
+
+/* ---------- units ---------- */
+const toF=c=>c*9/5+32;
+function fmt(c){return S().unit==="F"?Math.round(toF(c))+"°F":Math.round(c)+"°C"}
+function fmtD(c){return S().unit==="F"?Math.max(1,Math.round(c*1.8))+"°F":(Math.round(c*10)/10)+"°C"}
+function inC(v){return S().unit==="F"?(v-32)*5/9:v}
+
+/* ---------- weather ---------- */
+async function fetchLive(){
+  const url="https://api.open-meteo.com/v1/forecast?latitude="+LAT+"&longitude="+LON+
+    "&current=temperature_2m,apparent_temperature,wind_speed_10m&hourly=temperature_2m,wind_speed_10m,cloud_cover,shortwave_radiation&past_days=1&forecast_days=3&timezone=Europe%2FAthens";
+  const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();if(!j.hourly||!j.hourly.time)throw new Error("bad data");
+    live={fetchedAt:Date.now(),hourly:j.hourly,current:j.current};
+  }finally{clearTimeout(t)}
+}
+function dayRec(date){
+  const m=manual();
+  if(m&&m.date===date)return {low:m.low,high:m.high,sky:m.sky,wind:m.wind,src:"manual"};
+  const f=cloud.forecast;
+  if(f&&Array.isArray(f.days)){const d=f.days.find(x=>x.date===date);if(d)return {low:+d.low,high:+d.high,sky:d.sky||"mixed",wind:d.wind||"breezy",src:"claude"}}
+  const n=NORMALS[+date.slice(5,7)];
+  return {low:n[0],high:n[1],sky:"mixed",wind:"breezy",src:"normal"};
+}
+function curveTemp(date,h){
+  const today=dayRec(date);
+  if(h>=6&&h<=15)return today.low+(today.high-today.low)*(1-Math.cos(Math.PI*(h-6)/9))/2;
+  if(h>15){const nx=dayRec(addDays(date,1));return today.high+(nx.low-today.high)*(1-Math.cos(Math.PI*(h-15)/15))/2}
+  const pv=dayRec(addDays(date,-1));return pv.high+(today.low-pv.high)*(1-Math.cos(Math.PI*(h+9)/15))/2;
+}
+function hourWx(date,h){
+  if(live){
+    const key=date+"T"+String(h).padStart(2,"0")+":00";const i=live.hourly.time.indexOf(key);
+    if(i>=0){const H=live.hourly;return {t:H.temperature_2m[i],wind:H.wind_speed_10m[i],sun:H.shortwave_radiation[i]>50?1-H.cloud_cover[i]/100:null,src:"live"}}
+  }
+  const r=dayRec(date);
+  return {t:curveTemp(date,h),wind:WIND_KMH[r.wind]||20,sun:(h>=8&&h<17)?(SKY_SUN[r.sky]??.4):null,src:r.src};
+}
+// hours of a block starting from a given date/hour (or from the block start)
+function blockHours(blockId,date,fromH){
+  const b=B(blockId);const out=[];
+  let d=date,h=fromH==null?b.start:fromH;
+  while(true){
+    out.push([d,h]);
+    h++;if(h===24){h=0;d=addDays(d,1)}
+    if(h===b.end)break;
+    if(out.length>24)break;
+  }
+  return out;
+}
+function summarize(hours){
+  const w=hours.map(([d,h])=>hourWx(d,h));
+  const T=w.map(x=>x.t);const suns=w.map(x=>x.sun).filter(x=>x!=null);
+  const srcs=new Set(w.map(x=>x.src));
+  return {mean:T.reduce((a,b)=>a+b,0)/T.length,min:Math.min(...T),max:Math.max(...T),windMax:Math.max(...w.map(x=>x.wind)),
+    sun:suns.length?suns.reduce((a,b)=>a+b,0)/suns.length:0,daylight:suns.length>0,temps:T,hours:T.length,
+    src:srcs.has("live")?"live":srcs.has("manual")?"manual":srcs.has("claude")?"claude":"normal"};
+}
+
+/* ---------- the model ---------- */
+function evidence(roomId,blockId){return bank().filter(e=>e.room===roomId&&e.block===blockId)}
+function recommend(blockId,wx){
+  const cold=wx.mean<6,windy=wx.windMax>=30,sunny=wx.daylight&&wx.sun>=.6,s=S();
+  const rooms={};const why=[];let offRooms=[],learnedRooms=[];
+  ROOMS.forEach(r=>{
+    let t=BASE[blockId][r.id];
+    if(blockId==="night"&&cold&&r.id!=="bed")t+=.5;
+    if(blockId==="day"&&s.away&&r.id!=="bed")t-=cold?.5:1;
+    if(cold)t+=.5;
+    if(windy&&r.id!=="kit")t+=.5;
+    if(sunny&&(r.id==="upl"||r.id==="dnl"))t-=.5;
+    // blend with what has worked before
+    const ev=evidence(r.id,blockId).filter(e=>typeof e.setTemp==="number");
+    let W=1.5,Sum=t*1.5;
+    ev.forEach(e=>{
+      const age=(Date.now()-e.at)/864e5,w=Math.pow(.5,age/21);
+      let ideal=e.setTemp+(e.rating==="cold"?1:e.rating==="warm"?-1:0);
+      if(typeof e.outMean==="number")ideal+=.1*(e.outMean-wx.mean);
+      W+=w;Sum+=w*ideal;
+    });
+    const tl=Sum/W;
+    if(ev.length)learnedRooms.push(r.short.toLowerCase());
+    const tt=Math.round(clamp(tl,16,26));
+    const coldWhenOff=evidence(r.id,blockId).some(e=>e.setTemp==null&&e.rating==="cold"&&(Date.now()-e.at)<45*864e5&&typeof e.outMean==="number"&&e.outMean>=wx.mean-1);
+    const off=!coldWhenOff&&wx.mean>=tt-2&&wx.min>=tt-4;
+    if(off)offRooms.push(r.short.toLowerCase());
+    rooms[r.id]={t:tt,off,raw:tl,n:ev.length};
+  });
+  const b=blockId;
+  if(b==="morning")why.push("Morning warms the living spaces and kitchen while you get going. Heat set at 06:00 has the house comfortable by the time you’re up.");
+  if(b==="day")why.push("Daytime keeps the main living room comfortable and lets the bedroom idle. The upstairs living room runs a degree below downstairs because warm air climbs the spiral stair.");
+  if(b==="evening")why.push("Evening brings both living rooms up for relaxing and pre-warms the bedroom for later.");
+  if(b==="night")why.push("Overnight the bedroom holds a sleeping temperature and the rest of the house drops a few degrees. Concrete holds heat well, so this small setback recovers cheaply in the morning.");
+  if(s.away&&b==="day")why.push("You’re usually out during the day, so the living spaces and kitchen run "+fmtD(cold?.5:1)+" lower.");
+  if(cold)why.push("It’s below "+fmt(6)+" outside, so the concrete walls run cold. Targets go up a little and the overnight drop is smaller.");
+  if(windy)why.push("Wind up to "+Math.round(wx.windMax)+" km/h pushes cold air through gaps, so targets nudge up. Close curtains on the windward side.");
+  if(sunny)why.push("Sun is expected. Open the curtains and let the concrete soak up free heat; the living rooms come down a touch to make room for it.");
+  if(b==="night"||b==="evening")why.push("Close curtains and blinds after dark. Windows are where the house loses heat fastest.");
+  if(offRooms.length)why.push("It’s mild enough that the "+offRooms.join(" and ")+" can stay off. The concrete will carry the day’s warmth.");
+  if(learnedRooms.length)why.push("Your check-ins are shaping the "+learnedRooms.join(", ")+" for this time of day.");
+  why.push("Use TURBO only when a room is 3°C or more below its target, for 15 to 20 minutes, then switch it off.");
+  return {rooms,why};
+}
+function bundle(r,blockId,x){
+  const s=S();
+  if(s.awayDays)return {rows:[
+    ["⏻","On","",true],
+    ["ECO/DISPLAY + HEALTH/CLEAN","<b>8°C heat</b>","Press both together. Keeps the house from getting damp and cold while you’re away for days."],
+  ],off:"everything else"};
+  if(x.off)return {rows:[["⏻","<b>Off</b>","Mild enough to rest. If it feels cold, turn it on at "+fmt(x.t)+" and log a check-in so the plan learns.",true]],off:null};
+  const bedNight=r.id==="bed"&&(blockId==="night");
+  const wide=r.id==="upl"||r.id==="dnl";
+  return {rows:[
+    ["⏻","On","",true],
+    ["MODE","<b>HEAT</b>","Not AUTO, which can switch to cooling."],
+    ["▲ ▼","<b>"+fmt(x.t)+"</b>",S().unit==="F"?Math.round(x.t)+"°C on the remote":""],
+    ["FAN","<b>"+(bedNight?"MUTE":"AUTO")+"</b>",bedNight?"Quietest for sleeping.":"Speeds up to catch up, then slows to hold."],
+    ["Up/down flap<br>(left of FAN)","<b>Lowest, no swing</b>","Warm air rises, so aim it at the floor."],
+    ["Left/right flap<br>(right of FAN)","<b>"+(wide?"Swing":"Fixed, center")+"</b>",wide?"Spreads heat along the long room.":(r.id==="bed"?"Aim it away from the bed.":"")],
+    ["I FEEL","<b>On</b>","Reads the temperature at the remote, so leave the remote where you sit"+(r.id==="bed"?" or sleep":"")+", in this room."],
+    ["ECO/DISPLAY","<b>Eco off</b>"+(bedNight?", <b>display off</b>":""),"The plan already trims the temperature; Eco would second-guess it."]
+  ],off:"TURBO, GEN, TIMER/SLEEP, GENTLE WIND, HEALTH/CLEAN, Chill/Hot wind, 8°C heat"};
+}
+function energy(rec,wx){
+  const UA=190;let on=0,sum=0;
+  ROOMS.forEach(r=>{const x=rec.rooms[r.id];if(!x.off){on+=r.area;sum+=x.t*r.area}});
+  if(!on||S().awayDays)return null;
+  const tin=sum/on,frac=on/HEATED;let kwh=0,peak=0;
+  wx.temps.forEach(T=>{const q=Math.max(0,UA*frac*(tin-T));kwh+=q/clamp(2.6+.08*T,2.2,4.6)/1000;peak=Math.max(peak,q)});
+  return {kwh,pct:Math.round(peak/(4*3517)*100)};
+}
+
+/* ---------- render ---------- */
+const hue=t=>205-(clamp(t,16,24)-16)/8*177;
+const stairSvg='<svg viewBox="0 0 34 300" preserveAspectRatio="none" aria-hidden="true"><line x1="17" y1="0" x2="17" y2="300" stroke="#59626b" stroke-width="2"/><path d="M17 6 C 33 26,33 46,17 66 S 1 106,17 126 S 33 166,17 186 S 1 226,17 246 S 33 286,17 300" fill="none" stroke="#8a948f" stroke-width="1.6" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/></svg>';
+function roomBtn(r,x){
+  const away=S().awayDays;
+  const big=away?"8°":x.off?"Off":(S().unit==="F"?Math.round(toF(x.t)):x.t)+"°";
+  const sub=away?"8°C heat":x.off?"Leave it resting":(x.n?"Tuned by "+x.n+" check-in"+(x.n>1?"s":""):"Heat, fan Auto");
+  return '<button class="room'+(x.off&&!away?" off":"")+(sel===r.id?" sel":"")+'" data-room="'+r.id+'" style="grid-area:'+r.id+';--h:'+hue(away?16:x.t).toFixed(0)+'" aria-expanded="'+(sel===r.id)+'">'+
+    '<span class="rname">'+r.name+'</span><span class="rset">'+big+'</span><span class="rsub">'+sub+'</span></button>';
+}
+function skyWord(wx){if(!wx.daylight)return "After dark";return wx.sun>=.6?"Mostly sunny":wx.sun>=.3?"Some sun":"Cloudy"}
+function srcWord(src){return {live:"Live weather",claude:"Forecast loaded by Claude",manual:"Your forecast",normal:"Typical weather for this month"}[src]}
+
+function render(){
+  const p=parts();const curB=blockAt(p.h);const nb=nextBlock(curB);
+  const curHours=blockHours(curB,p.date,p.h);
+  const nStart=curHours[curHours.length-1];let nd=nStart[0],nh=nStart[1]+1;if(nh===24){nh=0;nd=addDays(nd,1)}
+  const wx=summarize(curHours),wxN=summarize(blockHours(nb,nd));
+  const rec=recommend(curB,wx),recN=recommend(nb,wxN);
+
+  // status
+  const st=$("status");st.className="status";
+  const today=dayRec(p.date);
+  if(wx.src==="live"){st.classList.add("live");st.textContent="Live Patras weather, refreshed hourly. Plan updates on the hour."}
+  else if(wx.src==="claude"){st.classList.add("live");st.textContent="Using the forecast Claude loaded"+(cloud.forecast&&cloud.forecast.updated?" on "+dayLabel(cloud.forecast.updated):"")+". Plan updates on the hour."}
+  else if(wx.src==="manual"){st.textContent="Using the forecast you entered for today. Plan updates on the hour."}
+  else{st.classList.add("warn");st.textContent="No forecast for today yet, so this uses typical November weather. Add today’s low and high below for a sharper plan."}
+  if(S().awayDays){st.className="status warn";st.textContent="Away mode is on: every unit holds 8°C. Turn it off in Settings when you’re back."}
+
+  const nowT=live&&live.current?live.current.temperature_2m:hourWx(p.date,p.h).t;
+  $("weather").innerHTML='<div class="wx"><div class="now">'+fmt(nowT)+'<small>'+(live?"Outside now":"Outside, estimated")+'</small></div>'+
+    '<div class="row">Until '+hh(B(curB).end)+': <b>'+fmt(wx.min)+' to '+fmt(wx.max)+'</b></div>'+
+    '<div class="row">Today '+fmt(today.low)+' to '+fmt(today.high)+', wind up to <b>'+Math.round(wx.windMax)+' km/h</b></div>'+
+    '<div class="row">'+skyWord(wx)+'</div></div>';
+
+  let plan='<div class="periodline"><h2>Set each unit to</h2><span>'+B(curB).name+", until "+hh(B(curB).end)+'</span></div>'+
+    '<div class="xsec"><div class="floorlab u">Upstairs</div>'+roomBtn(ROOMS[0],rec.rooms.bed)+'<div class="stair">'+stairSvg+'</div>'+roomBtn(ROOMS[1],rec.rooms.upl)+
+    '<div class="slab l"></div><div class="slab r"></div><div class="floorlab d">Downstairs</div>'+roomBtn(ROOMS[2],rec.rooms.kit)+roomBtn(ROOMS[3],rec.rooms.dnl)+'<div class="ground"></div></div>';
+  plan+=sel?panelHtml(curB,rec,wx):'<p class="caption">Tap a room for the full remote settings and to log how it felt.</p>';
+  $("plan").innerHTML=plan;
+
+  const lines=ROOMS.map(r=>{
+    const a=rec.rooms[r.id],b=recN.rooms[r.id];let d;
+    if(a.off!==b.off)d=b.off?"turn off":"turn on";else if(!b.off&&b.t!==a.t)d=(b.t>a.t?"up ":"down ")+fmtD(Math.abs(b.t-a.t));else d="no change";
+    return '<li><span>'+r.name+'</span><span class="v">'+(b.off?"Off":fmt(b.t))+'<span class="d">'+d+'</span></span></li>';
+  }).join("");
+  $("next").innerHTML=S().awayDays?"":'<h2>At '+hh(B(nb).start)+', '+B(nb).name.toLowerCase()+'</h2><ul class="switch">'+lines+'</ul>';
+
+  renderBank();
+  $("whyS").innerHTML=S().awayDays?"":'<h2>Why these numbers</h2><ul class="why-list">'+rec.why.map(s=>"<li>"+s+"</li>").join("")+"</ul>";
+  const e=energy(rec,wx);
+  $("energy").innerHTML='<h2>Energy until '+hh(B(curB).end)+'</h2>'+(!e?'<p>Little or no heating needed in this stretch.</p>':
+    '<p class="big">≈ '+e.kwh.toFixed(1)+' kWh<span>about €'+(e.kwh*S().price).toFixed(2)+'</span></p>'+
+    '<p>At the coldest hour the four units together run near '+Math.max(1,e.pct)+'% of capacity. Low, steady output is where inverter units are most efficient.</p>'+
+    '<p class="small">Rough estimate from typical heat loss for a concrete house this size. Your meter is the real test.</p>');
+  renderWxSrc(p);
+  renderPrefs();
+}
+
+function panelHtml(blockId,rec,wx){
+  const r=ROOMS.find(x=>x.id===sel);const x=rec.rooms[sel];const bd=bundle(r,blockId,x);
+  if(!draft||draft.room!==sel)draft={room:sel,setTemp:x.off?"off":x.t,fan:(r.id==="bed"&&blockId==="night")?"MUTE":"AUTO",rating:null,note:""};
+  const rows=bd.rows.map(([k,v,w,pw])=>'<li><span class="key'+(pw?" pw":"")+'">'+k+'</span><span class="val">'+v+(w?'<span class="why">'+w+'</span>':"")+'</span></li>').join("");
+  const tOpts=['<option value="off"'+(draft.setTemp==="off"?" selected":"")+'>Off</option>'];
+  for(let t=16;t<=26;t++)tOpts.push('<option value="'+t+'"'+(+draft.setTemp===t?" selected":"")+'>'+t+'°C'+(S().unit==="F"?" ("+Math.round(toF(t))+"°F)":"")+'</option>');
+  const fans=["AUTO","MUTE","LOW","MID-LOW","MID","MID-HIGH","HIGH"].map(f=>'<option'+(draft.fan===f?" selected":"")+'>'+f+'</option>').join("");
+  const rb=(v,l,c)=>'<button type="button" class="'+c+'" data-rate="'+v+'" aria-pressed="'+(draft.rating===v)+'">'+l+'</button>';
+  return '<div class="panel"><div class="panel-head"><h3>'+r.name+'</h3><span>'+B(blockId).name+'</span></div>'+
+    '<ul class="remote">'+rows+'</ul>'+(bd.off?'<div class="leaveoff">Leave off: <b>'+bd.off+'</b></div>':"")+
+    '<div class="checkin"><h3>How did it feel?</h3><p class="small">Log what the unit was actually on, even if it wasn’t the plan. Every check-in goes into your knowledge bank.</p>'+
+    '<div class="fields"><label>Set to<select id="ciTemp">'+tOpts.join("")+'</select></label><label>Fan<select id="ciFan">'+fans+'</select></label></div>'+
+    '<div class="seg">'+rb("cold","Too cold","cold")+rb("right","Just right","right")+rb("warm","Too warm","warm")+'</div>'+
+    '<label>Note (optional)<input id="ciNote" maxlength="160" placeholder="e.g. drafty by the balcony door" value="'+esc(draft.note)+'"></label>'+
+    '<button class="primary" data-act="saveCheckin"'+(draft.rating?"":" disabled")+'>Save check-in</button>'+
+    '<p class="toast">'+esc(toast)+'</p>'+(lastError?'<p class="err">'+esc(lastError)+'</p>':"")+'</div></div>';
+}
+
+function renderBank(){
+  const all=bank();
+  let html='<h2>Knowledge bank</h2>';
+  if(!all.length){
+    html+='<div class="card"><p>Nothing logged yet. Tap a room, set what you actually used, and say how it felt. A couple of check-ins a day is plenty; the plan shifts each room toward what’s worked.</p>'+
+      (cloud.ready?'<p class="small" style="margin:0">Your bank is saved to your account, so Claude can read it when you ask for a review in chat.</p>':'<p class="small" style="margin:0">Saved in this browser.</p>')+'</div>';
+    $("bank").innerHTML=html;return;
+  }
+  const items=[];
+  ROOMS.forEach(r=>{
+    const lines=[];
+    BLOCKS.forEach(b=>{
+      const ev=evidence(r.id,b.id);if(!ev.length)return;
+      const right=ev.filter(e=>e.rating==="right"&&typeof e.setTemp==="number");
+      const cold=ev.filter(e=>e.rating==="cold").length,warm=ev.filter(e=>e.rating==="warm").length;
+      let s=b.name+": ";
+      if(right.length){const counts={};right.forEach(e=>counts[e.setTemp]=(counts[e.setTemp]||0)+1);const best=Object.entries(counts).sort((a,c)=>c[1]-a[1])[0];s+=fmt(+best[0])+" worked "+best[1]+"×"}
+      else s+="no “just right” yet";
+      if(cold)s+=", "+cold+" too cold";if(warm)s+=", "+warm+" too warm";
+      lines.push(s);
+    });
+    if(lines.length)items.push('<li><span class="rm">'+r.name+'</span><div class="ln">'+lines.join("<br>")+'</div></li>');
+  });
+  const recent=all.slice(0,8).map(e=>{
+    const r=ROOMS.find(x=>x.id===e.room);const when=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(e.at));
+    const rate={cold:"Too cold",right:"Just right",warm:"Too warm"}[e.rating]||"";
+    return '<li><span><span class="r-'+e.rating+'">'+rate+'</span>, '+(r?r.short:e.room)+' at '+(e.setTemp==null?"off":fmt(e.setTemp))+(e.fan?", fan "+esc(e.fan):"")+
+      '<span class="meta">'+when+', outside about '+fmt(e.outMean)+'</span>'+(e.note?'<span class="note">“'+esc(e.note)+'”</span>':"")+'</span>'+
+      '<button class="x" data-del="'+esc(e.id)+'" aria-label="Delete this check-in">×</button></li>';
+  }).join("");
+  html+='<div class="card"><h3>What’s worked</h3><ul class="worked">'+items.join("")+'</ul>'+
+    '<h3 style="margin-top:14px">Recent check-ins</h3><ul class="log">'+recent+'</ul>'+
+    '<p class="small" style="margin:10px 0 0">'+all.length+' check-in'+(all.length>1?"s":"")+' in total. '+(cloud.ready?"Ask Claude in chat to review your bank and it can tune the plan’s starting points.":"Saved in this browser.")+'</p>'+(cloud.ready?"":'<a class="ghost" style="display:inline-block;margin-top:10px;text-decoration:none" target="_blank" rel="noopener" href="'+claudeLink(all)+'">Send my bank to Claude</a>')+'</div>';
+  $("bank").innerHTML=html;
+}
+
+function claudeLink(all){
+  const lines=all.slice(0,60).map(e=>[new Date(e.at).toISOString().slice(0,13),e.block,e.room,e.setTemp==null?"off":e.setTemp+"C",e.fan||"",e.rating,"out "+e.outMean+"C",e.note?"note: "+e.note:""].filter(Boolean).join(", "));
+  const q="Here are my latest Patras heat plan check-ins (time UTC, block, room, setting, fan, rating, outdoor average, note). Review what has and hasn't worked and suggest new starting setpoints per room and time block.\n\n"+lines.join("\n");
+  return "https://claude.ai/new?q="+encodeURIComponent(q.slice(0,6000));
+}
+function renderWxSrc(p){
+  const m=manual();const isToday=m&&m.date===p.date;const f=cloud.forecast;
+  let html='<h2>Weather source</h2><div class="card">';
+  if(live)html+='<p>Live hourly weather from Open-Meteo, last refreshed '+new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(live.fetchedAt))+'.</p>';
+  else html+='<p class="small">Pages on claude.ai can’t reach weather services directly, so the plan builds each hour from a daily low and high. Ask Claude in chat to “update the heat plan forecast” and it will load the coming week here.</p>';
+  if(f&&Array.isArray(f.days)){
+    const rows=f.days.filter(d=>d.date>=p.date).slice(0,7).map(d=>'<tr><td>'+dayLabel(d.date)+'</td><td>'+fmt(d.low)+' to '+fmt(d.high)+', '+esc(d.sky||"")+'</td></tr>').join("");
+    if(rows)html+='<table class="fc">'+rows+'</table>';
+  }
+  const u=S().unit;
+  html+='<form id="mform" style="margin-top:14px"><h3>'+(isToday?"Update today’s forecast":"Enter today’s forecast")+'</h3><div class="fields"><label>Low today (°'+u+')<input name="low" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.low):m.low):"")+'"></label>'+
+    '<label>High today (°'+u+')<input name="high" type="number" inputmode="decimal" step="1" required value="'+(isToday?Math.round(u==="F"?toF(m.high):m.high):"")+'"></label>'+
+    '<label>Sky<select name="sky">'+["sunny","mixed","overcast","rain"].map(s=>'<option value="'+s+'"'+((isToday?m.sky:"mixed")===s?" selected":"")+'>'+{sunny:"Sunny",mixed:"Some sun",overcast:"Overcast",rain:"Rain"}[s]+'</option>').join("")+'</select></label>'+
+    '<label>Wind<select name="wind">'+["calm","breezy","windy"].map(s=>'<option value="'+s+'"'+((isToday?m.wind:"breezy")===s?" selected":"")+'>'+{calm:"Calm",breezy:"Breezy",windy:"Windy, 30+ km/h"}[s]+'</option>').join("")+'</select></label></div>'+
+    '<button class="primary" type="submit">Use this forecast</button></form>';
+  html+='</div>';
+  $("wxsrc").innerHTML=html;
+}
+
+function renderPrefs(){
+  const s=S();
+  const seg=(attr,opts,cur)=>'<div class="seg">'+opts.map(([v,l])=>'<button type="button" data-'+attr+'="'+v+'" aria-pressed="'+(String(cur)===String(v))+'">'+l+'</button>').join("")+'</div>';
+  $("prefs").innerHTML='<h2>Settings</h2><div class="card">'+
+    '<div class="prefrow"><span>Show temperatures in</span>'+seg("unit",[["C","°C"],["F","°F"]],s.unit)+'</div>'+
+    '<div class="prefrow"><span>During the day I’m usually</span>'+seg("away",[["0","Home"],["1","Out"]],s.away?1:0)+'</div>'+
+    '<div class="prefrow"><span>Away for several days</span>'+seg("awaydays",[["0","No"],["1","Yes"]],s.awayDays?1:0)+'</div>'+
+    '<div class="prefrow"><label for="price" style="color:var(--text);font-size:16px;flex-direction:row">Electricity, € per kWh</label><input id="price" type="number" inputmode="decimal" step="0.01" min="0" value="'+s.price+'"></div>'+
+  '</div>';
+}
+function safeRender(){
+  try{render()}
+  catch(e){$("status").className="status warn";$("status").textContent="Something went wrong drawing the plan: "+(e&&e.message?e.message:e)+". Reload the page."}
+}
+
+/* ---------- events ---------- */
+function liveDraft(){
+  const t=$("ciTemp"),f=$("ciFan"),n=$("ciNote");
+  if(!draft)return;
+  if(t)draft.setTemp=t.value==="off"?"off":+t.value;
+  if(f)draft.fan=f.value;
+  if(n)draft.note=n.value;
+}
+document.addEventListener("click",async ev=>{
+  const b=ev.target.closest("button");if(!b)return;
+  if(b.dataset.room){liveDraft();sel=sel===b.dataset.room?null:b.dataset.room;draft=null;toast="";lastError="";safeRender();return}
+  if(b.dataset.rate){liveDraft();draft.rating=b.dataset.rate;safeRender();return}
+  if(b.dataset.del){if(confirm("Delete this check-in from your bank?"))await delCheckin(b.dataset.del);return}
+  if(b.dataset.unit){S().unit=b.dataset.unit;saveState();safeRender();return}
+  if(b.dataset.away){S().away=b.dataset.away==="1";saveState();safeRender();return}
+  if(b.dataset.awaydays){S().awayDays=b.dataset.awaydays==="1";saveState();safeRender();return}
+  if(b.dataset.act==="saveCheckin"){
+    liveDraft();if(!draft||!draft.rating)return;
+    const p=parts(),blk=blockAt(p.h);
+    const wx=summarize(blockHours(blk,p.date,p.h));
+    const c={at:Date.now(),date:p.date,hour:p.h,block:blk,room:draft.room,setTemp:draft.setTemp==="off"?null:draft.setTemp,fan:draft.fan,
+      rating:draft.rating,note:(draft.note||"").trim().slice(0,160),outMean:Math.round(wx.mean*10)/10,outNow:Math.round(hourWx(p.date,p.h).t*10)/10,wxSource:wx.src};
+    b.disabled=true;
+    await addCheckin(c);
+    const r=ROOMS.find(x=>x.id===draft.room);
+    toast="Saved to your bank. The "+r.short.toLowerCase()+" plan takes it into account from now on.";
+    draft=Object.assign({},draft,{rating:null,note:""});
+    safeRender();return;
+  }
+});
+document.addEventListener("input",ev=>{if(ev.target.id==="ciNote"&&draft)draft.note=ev.target.value});
+document.addEventListener("change",ev=>{
+  if(ev.target.id==="ciTemp"||ev.target.id==="ciFan"){liveDraft();return}
+  if(ev.target.id==="price"){const v=parseFloat(ev.target.value);if(!isNaN(v)&&v>=0){S().price=v;saveState();safeRender()}}
+});
+document.addEventListener("submit",ev=>{
+  if(ev.target.id!=="mform")return;ev.preventDefault();
+  const f=new FormData(ev.target);let low=inC(+f.get("low")),high=inC(+f.get("high"));if(low>high)[low,high]=[high,low];
+  const m={date:parts().date,low:Math.round(low*10)/10,high:Math.round(high*10)/10,sky:f.get("sky"),wind:f.get("wind"),at:Date.now()};
+  local.manual=m;cloud.manual=m;saveState();safeRender();window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* ---------- schedule ---------- */
+let lastHourKey="";
+function tick(){const p=parts();const k=p.date+p.h;if(k!==lastHourKey){lastHourKey=k;safeRender();if(!live||Date.now()-live.fetchedAt>55*60e3)tryLive()}}
+async function tryLive(){try{await fetchLive();safeRender()}catch(e){}}
+setInterval(tick,60e3);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});
+
+safeRender();
+lastHourKey=parts().date+parts().h;
+initCloud();
+tryLive();
+})();
+</script>
+</body>
+</html>
