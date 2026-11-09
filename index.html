@@ -25,18 +25,21 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 :root[data-theme="dark"]{color-scheme:dark}
-html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg);overflow-anchor:auto}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;min-height:100%;color:var(--text);font-family:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;
   background:radial-gradient(120% 60% at 50% -10%,#272c33 0%,var(--bg) 62%) fixed,var(--bg)}
 .wrap{max-width:640px;margin:0 auto;padding:28px 18px 64px;position:relative;z-index:1}
-/* Patras backdrop: view over the city to the gulf from the castle */
-.backdrop{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.backdrop img{width:100%;height:100%;object-fit:cover;object-position:62% 40%;opacity:0;filter:saturate(.75) contrast(1.05);transition:opacity 1.2s ease}
-.backdrop img.on{opacity:.24}
-.backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(19,22,25,.05) 0%,rgba(19,22,25,.4) 50%,rgba(19,22,25,.75) 100%)}
-.credit{margin-top:36px;font-size:11px;color:var(--faint);text-align:center}
-.credit a{color:inherit}
+/* backdrop: graphite with a faint cool glow up top, a faint warm glow below, and fine grain */
+.backdrop{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  background:linear-gradient(180deg,#1d2228 0%,#15181c 55%,#121518 100%)}
+/* organic color drifts, painted once to a canvas; only the finished image moves, so it stays smooth */
+.backdrop canvas{position:absolute;left:-6%;top:-6%;width:112%;height:112%;opacity:0;transition:opacity 2.4s ease;
+  transform:translate3d(0,0,0);backface-visibility:hidden;animation:drift 90s ease-in-out infinite alternate}
+.backdrop canvas.on{opacity:1}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-2.5%,1.5%,0) scale(1.04)}}
+.backdrop::after{content:"";position:absolute;inset:0;opacity:.045;z-index:2;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 h1{font-size:15px;font-weight:600;letter-spacing:.01em;margin:0;color:var(--text)}
 h1 .pipe{color:var(--faint);font-weight:300;margin:0 4px}
 h2{font-size:17px;font-weight:600;margin:0 0 12px;letter-spacing:-.005em}
@@ -80,7 +83,16 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   border:1px solid hsla(var(--h),var(--s),68%,.34);
   background:radial-gradient(130% 90% at 15% 0%,hsla(var(--h),var(--s),56%,.36) 0%,hsla(var(--h),var(--s),46%,.08) 55%,transparent 80%),var(--panel);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 28px -14px rgba(0,0,0,.75);transition:transform .25s ease,border-color .25s ease}
-.room:active{transform:scale(.985)}
+.room:active{transform:scale(.98)}
+@media (hover:hover){.room:hover{border-color:hsla(var(--h),var(--s),72%,.5)}}
+.room{touch-action:manipulation}
+.panel.enter{animation:panelIn .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes panelIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.toast{transition:opacity .4s ease}
+.toast.fade{opacity:0}
+button{touch-action:manipulation}
+.seg button:active,.primary:active,.ghost:active{transform:scale(.97)}
+.primary{transition:opacity .2s ease,transform .12s ease,background .2s ease}
 .room.sel{border-color:hsla(var(--h),var(--s),72%,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 3px hsla(var(--h),var(--s),60%,.18)}
 .rname{font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.25}
 .rset{font-size:clamp(48px,14vw,68px);font-weight:200;line-height:.95;letter-spacing:-.045em;color:hsl(var(--h),calc(var(--s) + 12%),78%);margin-top:auto}
@@ -159,7 +171,7 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
 </style>
 </head>
 <body>
-<div class="backdrop" aria-hidden="true"><img alt="" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Patras_from_the_fortress.jpg/1920px-Patras_from_the_fortress.jpg" onload="this.classList.add('on')" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='https://upload.wikimedia.org/wikipedia/commons/a/a3/Patras_from_the_fortress.jpg'}else{this.remove()}"></div>
+<div class="backdrop" aria-hidden="true"></div>
 <main class="wrap">
   <header>
     <h1>101 Aratou, Patras, Greece <span class="pipe">|</span> Heat Plan</h1>
@@ -173,7 +185,6 @@ select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
   <section id="energy" class="energy"></section>
   
   <section id="prefs"></section>
-<p class="credit">Background: Patras from the castle, © Guillaume Piolle, <a href="https://commons.wikimedia.org/wiki/File:Patras_from_the_fortress.jpg" target="_blank" rel="noopener">CC BY 3.0</a></p>
 </main>
 <noscript><p style="padding:16px">This page needs JavaScript. Open it from its claude.ai link in the Claude app or a browser.</p></noscript>
 
@@ -217,7 +228,7 @@ const S=()=>local.settings;
 
 const cloud={db:null,uid:null,ready:false,forecast:null,checkins:null,manual:null,settingsLoaded:false};
 let live=null; // {fetchedAt, hourly, current}
-let sel=null, draft=null, toast="", lastError="";
+let sel=null, draft=null, toast="", lastError="", panelOpened=false, pending=false, toastTimer=null;
 
 function bank(){return cloud.checkins||local.checkins}
 function manual(){return cloud.manual||local.manual}
@@ -229,9 +240,9 @@ async function initCloud(){
     if(!db||!user)return;
     const uid=await user.id();if(!uid)return;
     cloud.db=db;cloud.uid=uid;
-    db.doc("weather/forecast").onSnapshot(s=>{cloud.forecast=s.exists?s.data():null;safeRender()},()=>{});
+    db.doc("weather/forecast").onSnapshot(s=>{cloud.forecast=s.exists?s.data():null;softRender()},()=>{});
     db.collection("data/users/"+uid+"/bank/checkins").onSnapshot(q=>{
-      cloud.checkins=q.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>b.at-a.at);safeRender();
+      cloud.checkins=q.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>b.at-a.at);softRender();
     },()=>{});
     db.doc("data/users/"+uid+"/state").onSnapshot(s=>{
       if(s.exists){const d=s.data();if(d.settings&&!cloud.settingsLoaded){local.settings=Object.assign(local.settings,d.settings);saveLocal()}cloud.manual=d.manual||null}
@@ -420,8 +431,8 @@ function energy(rec,wx){
 // cool setpoints read steel blue, warm ones amber; never green
 // setpoints: 18°C (64°F) and below cool, 19–21°C (66–70°F) warm, 22°C (72°F) and up hot
 const tier=t=>t<=18.5?"cool":t<21.5?"warm":"hot";
-// outside: below 15°C (59°F) cool, up to 26°C (79°F) warm, above that hot
-const tierOut=t=>t<15?"cool":t<=26?"warm":"hot";
+// outside, by the rounded °F reading: 60 and below cool, 61–70 warm, 71 and up hot
+const tierOut=t=>{const f=Math.round(t*9/5+32);return f<=60?"cool":f<=70?"warm":"hot"};
 const TIER={cool:[210,"60%"],warm:[28,"85%"],hot:[4,"78%"]};
 const hue=t=>TIER[tier(t)][0];
 const sat=t=>TIER[tier(t)][1];
@@ -429,7 +440,7 @@ const tc=(t,out)=>"t-"+(out?tierOut(t):tier(t));
 const stairSvg='<svg viewBox="0 0 22 300" preserveAspectRatio="none" aria-hidden="true"><path d="M11 6 C 21 26,21 46,11 66 S 1 106,11 126 S 21 166,11 186 S 1 226,11 246 S 21 286,11 300" fill="none" stroke="#9aa1a8" stroke-width="1.2" stroke-dasharray="2 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
 function roomBtn(r,x){
   const away=S().awayDays;
-  const big=away?"8°":x.off?"Off":(S().unit==="F"?Math.round(toF(x.t)):x.t)+"°";
+  const big=away?"Away":x.off?"Off":(S().unit==="F"?Math.round(toF(x.t)):x.t)+"°";
   const sub=away?"8°C heat":x.off?"Resting":(x.n?"Tuned by "+x.n+" check-in"+(x.n>1?"s":""):"Heat, fan Auto");
   return '<button class="room'+(x.off&&!away?" off":"")+(sel===r.id?" sel":"")+'" data-room="'+r.id+'" style="grid-area:'+r.id+';--h:'+hue(away?16:x.t).toFixed(0)+';--s:'+sat(away?16:x.t)+'" aria-expanded="'+(sel===r.id)+'">'+
     '<span class="rname">'+r.name+'</span><span class="rset">'+big+'</span><span class="rsub">'+sub+'</span></button>';
@@ -437,6 +448,63 @@ function roomBtn(r,x){
 function skyWord(wx){if(!wx.daylight)return "After dark";return wx.sun>=.6?"Mostly sunny":wx.sun>=.3?"Some sun":"Cloudy"}
 function srcWord(src){return {live:"Live weather",claude:"Forecast loaded by Claude",manual:"Your forecast",normal:"Typical weather for this month"}[src]}
 
+/* dynamic backdrop: blues when it's cool outside, oranges when warm, reds when hot.
+   A few meandering streams of irregular, blurred shapes in shades of one palette. */
+const PALETTE={
+  cool:["#3f7fd0","#5fa4e6","#2f5f9e","#7aa9dc","#4a90c8"],
+  warm:["#e8862f","#f2a44c","#d46f2a","#f5b968","#e0913f"],
+  hot:["#d93c30","#ec5a43","#b8302b","#f07a45","#e2483a"]
+};
+const ACCENT={cool:"#c08a4a",warm:"#4f7fb8",hot:"#d98a3a"};
+let layout=null,lastTier=null,layers=[],front=0;
+// random streams of lumpy blobs, in a 100 x 180 design space
+function makeLayout(){
+  const blobs=[];
+  for(let st=0;st<3;st++){
+    let x=Math.random()*100,y=st*60+Math.random()*30,ang=Math.random()*Math.PI*2;
+    const pieces=4+Math.floor(Math.random()*3);
+    for(let i=0;i<pieces;i++){
+      const r=(16-i*1.8)*(.7+Math.random()*.6),n=7+Math.floor(Math.random()*3),pts=[];
+      const a0=Math.random()*Math.PI*2,stretch=.6+Math.random()*.8,tilt=Math.random()*Math.PI;
+      for(let k=0;k<n;k++){const a=a0+k/n*Math.PI*2,rr=r*(.62+Math.random()*.6),px=Math.cos(a)*rr*stretch,py=Math.sin(a)*rr;
+        pts.push([x+px*Math.cos(tilt)-py*Math.sin(tilt),y+px*Math.sin(tilt)+py*Math.cos(tilt)])}
+      blobs.push({pts,i:st*7+i,o:.11+Math.random()*.07,accent:false});
+      ang+=(Math.random()-.5)*1.6;const step=r*(1.1+Math.random()*.9);x+=Math.cos(ang)*step;y+=Math.sin(ang)*step+6;
+      if(x<-10||x>110)ang=Math.PI-ang;
+    }
+  }
+  const cx=20+Math.random()*60,cy=40+Math.random()*100,pts=[];for(let k=0;k<8;k++){const a=k/8*Math.PI*2,rr=9*(.7+Math.random()*.5);pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr])}
+  blobs.push({pts,i:0,o:.07,accent:true});
+  return blobs;
+}
+function drawLayer(cv,tier){
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),W=Math.round(innerWidth*1.12*dpr),Hh=Math.round(innerHeight*1.12*dpr);
+  cv.width=W;cv.height=Hh;const ctx=cv.getContext("2d");ctx.clearRect(0,0,W,Hh);
+  const sc=Math.max(W/100,Hh/180),ox=(W-100*sc)/2,oy=(Hh-180*sc)/2,X=v=>ox+v*sc,Yy=v=>oy+v*sc;
+  const canBlur="filter" in ctx;if(canBlur)ctx.filter="blur("+Math.round(5.5*sc)+"px)";
+  layout.forEach(bl=>{
+    const col=bl.accent?ACCENT[tier]:PALETTE[tier][bl.i%PALETTE[tier].length];
+    ctx.globalAlpha=bl.o;ctx.fillStyle=col;
+    const P=bl.pts,n=P.length,mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+    ctx.beginPath();let m=mid(P[n-1],P[0]);ctx.moveTo(X(m[0]),Yy(m[1]));
+    for(let k=0;k<n;k++){const q=P[k],mm=mid(q,P[(k+1)%n]);ctx.quadraticCurveTo(X(q[0]),Yy(q[1]),X(mm[0]),Yy(mm[1]))}
+    ctx.closePath();
+    if(!canBlur){const c=[...P].reduce((a,p)=>[a[0]+p[0]/n,a[1]+p[1]/n],[0,0]),g=ctx.createRadialGradient(X(c[0]),Yy(c[1]),0,X(c[0]),Yy(c[1]),14*sc);g.addColorStop(0,col);g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g}
+    ctx.fill();
+  });
+}
+function paintBackdrop(t,force){
+  const tier=tierOut(t),host=document.querySelector(".backdrop");if(!host)return;
+  if(!layout){
+    layout=makeLayout();
+    for(let i=0;i<2;i++){const c=document.createElement("canvas");c.setAttribute("aria-hidden","true");host.insertBefore(c,host.firstChild);layers.push(c)}
+  }
+  if(tier===lastTier&&!force)return;lastTier=tier;
+  // draw the new palette on the hidden layer, then crossfade
+  const next=layers[1-front];drawLayer(next,tier);
+  requestAnimationFrame(()=>{next.classList.add("on");layers[front].classList.remove("on");front=1-front});
+}
+let rsz=null;window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(()=>{if(layout&&lastTier){const c=layers[front];drawLayer(c,lastTier)}},250)});
 function render(){
   const p=parts();const curB=blockAt(p.h);const nb=nextBlock(curB);
   const curHours=blockHours(curB,p.date,p.h);
@@ -454,6 +522,7 @@ function render(){
   if(S().awayDays){st.className="status warn";st.textContent="Away mode: every unit at 8°C"}
 
   const nowT=live&&live.current?live.current.temperature_2m:hourWx(p.date,p.h).t;
+  paintBackdrop(nowT);
   $("weather").innerHTML='<div class="wx"><div class="now '+tc(nowT,true)+'">'+fmt(nowT).replace(/°[CF]/,"°")+'<small>Outside</small></div>'+
     '<div class="row"><b>'+fmt(wx.min).replace(/°[CF]/,"°")+' – '+fmt(wx.max).replace(/°[CF]/,"°")+'</b> until '+hh(B(curB).end)+'</div>'+
     '<div class="row">Wind '+Math.round(wx.windMax)+' km/h</div>'+
@@ -486,10 +555,11 @@ function panelHtml(blockId,rec,wx){
   if(!draft||draft.room!==sel)draft={room:sel,setTemp:x.off?"off":x.t,fan:(r.id==="bed"&&blockId==="night")?"MUTE":"AUTO",rating:null,note:""};
   const rows=bd.rows.map(([k,v,w,pw])=>'<li><span class="key'+(pw?" pw":"")+'">'+k+'</span><span class="val">'+v+(w?'<span class="why">'+w+'</span>':"")+'</span></li>').join("");
   const tOpts=['<option value="off"'+(draft.setTemp==="off"?" selected":"")+'>Off</option>'];
-  for(let t=16;t<=26;t++)tOpts.push('<option value="'+t+'"'+(+draft.setTemp===t?" selected":"")+'>'+t+'°C'+(S().unit==="F"?" ("+Math.round(toF(t))+"°F)":"")+'</option>');
+  for(let t=16;t<=26;t++)tOpts.push('<option value="'+t+'"'+(+draft.setTemp===t?" selected":"")+'>'+(S().unit==="F"?Math.round(toF(t))+"°F":t+"°C")+'</option>');
   const fans=["AUTO","MUTE","LOW","MID-LOW","MID","MID-HIGH","HIGH"].map(f=>'<option'+(draft.fan===f?" selected":"")+'>'+f+'</option>').join("");
   const rb=(v,l,c)=>'<button type="button" class="'+c+'" data-rate="'+v+'" aria-pressed="'+(draft.rating===v)+'">'+l+'</button>';
-  return '<div class="panel"><div class="panel-head"><h3>'+r.name+'</h3><span>'+B(blockId).name+'</span></div>'+
+  const enter=panelOpened;panelOpened=false;
+  return '<div class="panel'+(enter?" enter":"")+'"><div class="panel-head"><h3>'+r.name+'</h3><span>'+B(blockId).name+'</span></div>'+
     '<ul class="remote">'+rows+'</ul>'+(bd.off?'<div class="leaveoff">Leave off: <b>'+bd.off+'</b></div>':"")+
     '<div class="checkin"><h3>How does it feel?</h3>'+
     '<div class="fields"><label>Set to<select id="ciTemp">'+tOpts.join("")+'</select></label><label>Fan<select id="ciFan">'+fans+'</select></label></div>'+
@@ -567,6 +637,9 @@ function renderPrefs(){
     '<div class="prefrow"><label for="price" style="color:var(--text);font-size:14.5px;font-weight:400;flex-direction:row">Price per kWh (€)</label><input id="price" type="number" inputmode="decimal" step="0.01" min="0" value="'+s.price+'"></div>'+
   '</div>';
 }
+function busy(){const a=document.activeElement;return !!(a&&a.closest&&a.closest(".checkin")&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))}
+function softRender(){if(busy()){pending=true;return}safeRender()}
+document.addEventListener("focusout",()=>{setTimeout(()=>{if(pending&&!busy()){pending=false;safeRender()}},50)});
 function safeRender(){
   try{render()}
   catch(e){$("status").className="status warn";$("status").textContent="Something went wrong drawing the plan: "+(e&&e.message?e.message:e)+". Reload the page."}
@@ -582,8 +655,15 @@ function liveDraft(){
 }
 document.addEventListener("click",async ev=>{
   const b=ev.target.closest("button");if(!b)return;
-  if(b.dataset.room){liveDraft();sel=sel===b.dataset.room?null:b.dataset.room;draft=null;toast="";lastError="";safeRender();return}
-  if(b.dataset.rate){liveDraft();draft.rating=b.dataset.rate;safeRender();return}
+  if(b.dataset.room){
+    liveDraft();const was=sel;sel=sel===b.dataset.room?null:b.dataset.room;draft=null;toast="";lastError="";panelOpened=!!sel;safeRender();
+    if(sel){const pn=document.querySelector(".panel");if(pn){const r=pn.getBoundingClientRect();if(r.top>innerHeight*.55||r.top<0)pn.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}}
+    return}
+  if(b.dataset.rate){
+    // update the three buttons and the save button in place, so nothing else redraws
+    liveDraft();draft.rating=b.dataset.rate;
+    document.querySelectorAll("[data-rate]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.rate===draft.rating)));
+    const sv=document.querySelector('[data-act="saveCheckin"]');if(sv)sv.disabled=false;return}
   if(b.dataset.del){if(confirm("Delete this check-in from your bank?"))await delCheckin(b.dataset.del);return}
   if(b.dataset.unit){S().unit=b.dataset.unit;S().unitChosen=true;saveState();safeRender();return}
   if(b.dataset.away){S().away=b.dataset.away==="1";saveState();safeRender();return}
@@ -599,7 +679,9 @@ document.addEventListener("click",async ev=>{
     const r=ROOMS.find(x=>x.id===draft.room);
     toast="Saved";
     draft=Object.assign({},draft,{rating:null,note:""});
-    safeRender();return;
+    safeRender();
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>{const t=document.querySelector(".toast");if(t)t.classList.add("fade");setTimeout(()=>{toast="";if(t)t.textContent=""},420)},1800);
+    return;
   }
 });
 document.addEventListener("input",ev=>{if(ev.target.id==="ciNote"&&draft)draft.note=ev.target.value});
@@ -616,8 +698,8 @@ document.addEventListener("submit",ev=>{
 
 /* ---------- schedule ---------- */
 let lastHourKey="";
-function tick(){const p=parts();const k=p.date+p.h;if(k!==lastHourKey){lastHourKey=k;safeRender();if(!live||Date.now()-live.fetchedAt>55*60e3)tryLive()}}
-async function tryLive(){try{await fetchLive();safeRender()}catch(e){}}
+function tick(){const p=parts();const k=p.date+p.h;if(k!==lastHourKey){lastHourKey=k;softRender();if(!live||Date.now()-live.fetchedAt>55*60e3)tryLive()}}
+async function tryLive(){try{await fetchLive();softRender()}catch(e){}}
 setInterval(tick,60e3);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});
 
